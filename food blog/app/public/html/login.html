@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title> Foodies 'R' Us Blog Login</title>
+        <title> Login - TutorHub </title>
         <meta charset="utf-8">
         <link rel="icon" type="image/x-icon" href="../imgs/foodie.ico">
         <link rel="stylesheet" href="../css/style.css">
@@ -9,21 +9,42 @@
     </head>
     <body>
         <header>
-            <a href="../html/index.html"><img id="logo" src="../imgs/logo.png"></a>
-            <h1>Welcome to Foodies 'R' Us!</h1>
+            <a href="../html/index.html"><img id="logo" src="../imgs/logo.png" alt="TutorHub Logo"></a>
+            <h1>TutorHub - Login</h1>
         </header>
-        <main>
-        <p>Please enter your username and password to continue.</p>
 
-        <form method="post" action="/" id="login_form">
-            <label for="username_input">Username:</label>
-            <input type="text" id="username_input" name="username_input" placeholder="Please enter your username...">
-
-            <label for="password_input">Password:</label>
-            <input type="password" id="password_input" name="password_input" placeholder="Please enter your password...">
-
-            <button id="login_btn" type="submit">Log in</button>
-        </form>
+        <main style="max-width: 500px; margin: 40px auto;">
+            <section style="padding: 30px;">
+                <h2>Login to TutorHub</h2>
+                <div style="margin: 20px 0; text-align: center;">
+                    <button class="role-btn link_btn" data-role="student" style="margin: 0 10px; background-color: #f56d36;">Student</button>
+                    <button class="role-btn link_btn" data-role="tutor" style="margin: 0 10px;">Tutor</button>
+                </div>
+                
+                <form id="loginForm" style="text-align: left;">
+                    <div style="margin-bottom: 20px;">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required style="width: 100%;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required style="width: 100%;">
+                    </div>
+                    
+                    <div style="background-color: #f7a98b; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                        <p><strong>Demo Credentials:</strong></p>
+                        <p>Student: student1 / password123</p>
+                        <p>Tutor: johndoe / tutor123</p>
+                    </div>
+                    
+                    <button type="submit" class="link_btn" style="width: 100%;">Login</button>
+                </form>
+            </section>
         </main>
+        
+        <footer>
+            <p>&copy; 2024 TutorHub - Empowering Education</p>
+        </footer>
     </body>
 </html>
