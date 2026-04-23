@@ -1,63 +1,90 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-    <head>
-        <title> TutorHub - Find Your Perfect Tutor </title>
-        <meta charset="utf-8">
-        <link rel="stylesheet" href="../css/style.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-        <script src="../js/main.js" defer></script>
-        <script src="../js/index.js" defer></script>
-    </head>
-    <body>
-        <header>
-            <a href="../html/index.html"><img id="logo" src="../imgs/logo.png" alt="TutorHub Logo"></a>
-            <h1>TutorHub - Connect with Expert Tutors</h1>
-            <div class="dropdown">
-                <button id="login_link" href="#">Account <i class="fa fa-caret-down"></i></button>
-                <div class="dropdown-content">
-                    <a id="login_btn" href="../html/login.html">Login</a>
-                    <a id="logout_btn" href="#" style="display:none;">Log out</a>
-                </div>
-            </div>
-        </header>
+  <head>
+    <title>TutorHub - Find Your Perfect Tutor</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <script src="../js/main.js" defer></script>
+    <script type="module" src="../js/index.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a href="../html/index.html"
+        ><img id="logo" src="../imgs/logo.png" alt="TutorHub Logo"
+      /></a>
+      <h1>TutorHub - Connect with Expert Tutors</h1>
+      <div class="dropdown">
+        <button id="login_link" href="#">
+          Account <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content">
+          <a id="login_btn" href="../html/login.html">Login</a>
+          <a id="logout_btn" href="#" style="display: none">Log out</a>
+        </div>
+      </div>
+    </header>
 
-        <nav>
-            <ul>
-                <li class="active"><a href="../html/index.html">Home</a></li>
-                <li><a href="../html/tutors.html">All Tutors</a></li>
-                <li id="myBookingsNav" style="display:none;"><a href="../html/my_bookings.html">My Bookings</a></li>
-            </ul>
-        </nav>
+    <nav>
+      <ul>
+        <li class="active"><a href="../html/index.html">Home</a></li>
+        <li><a href="../html/tutors.html">All Tutors</a></li>
+        <li id="myBookingsNav" style="display: none">
+          <a href="../html/my_bookings.html">My Bookings</a>
+        </li>
+      </ul>
+    </nav>
 
-        <main>
-            <!-- Search Section -->
-            <section id="searchSection">
-                <h2>Find a Tutor</h2>
-                <p>Search for tutors by subject, name, or qualifications</p>
-                <div class="search-container" style="text-align: center; margin: 20px 0;">
-                    <input type="text" id="searchInput" class="search_bar" placeholder="Search by subject (e.g., Mathematics, Physics, English)..." />
-                    <button id="searchBtn" class="link_btn" style="display: inline-block; width: auto; margin: 0 10px;"><i class="fa fa-search"></i> Search</button>
-                </div>
-                <div id="searchResults"></div>
-            </section>
+    <main>
+      <!-- Search Section -->
+      <section id="searchSection">
+        <h2>Find a Tutor</h2>
+        <p>Search for tutors by subject, name, or qualifications</p>
+        <div
+          class="search-container"
+          style="text-align: center; margin: 20px 0"
+        >
+          <input
+            type="text"
+            id="searchInput"
+            class="search_bar"
+            placeholder="Search by subject (e.g., Mathematics, Physics, English)..."
+          />
+          <button
+            id="searchBtn"
+            class="link_btn"
+            style="display: inline-block; width: auto; margin: 0 10px"
+          >
+            <i class="fa fa-search"></i> Search
+          </button>
+        </div>
+        <div id="searchResults"></div>
+      </section>
 
-            <!-- Featured Tutors Section -->
-            <section id="featuredTutors">
-                <h2>Featured Tutors</h2>
-                <p>Meet our top-rated tutors with proven success stories!</p>
-                <div id="featuredTutorsList"></div>
-            </section>
+      <!-- Featured Tutors Section -->
+      <section id="featuredTutors">
+        <h2>Featured Tutors</h2>
+        <p>Meet our top-rated tutors with proven success stories!</p>
+        <div id="featuredTutorsList"></div>
+      </section>
 
-            <!-- Recent Success Stories Section -->
-            <section id="successStories">
-                <h2>Recent Success Stories</h2>
-                <p>See the amazing achievements from our tutors and students!</p>
-                <div id="storiesList"></div>
-                <p><a class="link_btn" href="../html/success_stories.html">View All Stories</a></p>
-            </section>
-        </main>
-        <footer>
-            <p>&copy; 2024 TutorHub - Empowering Education</p>
-        </footer>
-    </body>
+      <!-- Recent Success Stories Section -->
+      <section id="successStories">
+        <h2>Recent Success Stories</h2>
+        <p>See the amazing achievements from our tutors and students!</p>
+        <div id="storiesList"></div>
+        <p>
+          <a class="link_btn" href="../html/success_stories.html"
+            >View All Stories</a
+          >
+        </p>
+      </section>
+    </main>
+    <footer>
+      <p>&copy; 2024 TutorHub - Empowering Education</p>
+    </footer>
+  </body>
 </html>

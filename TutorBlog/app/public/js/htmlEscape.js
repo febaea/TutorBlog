@@ -4,11 +4,11 @@
 // when the output is rendered as HTML. So not in attributes, URLs, or JavaScript contexts.
 
 //Encodes Outputs
-function htmlEscape(text) {
+export function htmlEscape(text) {
   return String(text)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+    .replaceAll("'", "&#x27;");
 }
