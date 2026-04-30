@@ -3,7 +3,11 @@ const pool = require('./db');
 const app = express();
 const port = 3000;
 // TO DO : Make sure db doesn't store passwords as plain text - include hashing 
-// TO DO : Make sure it is -  currentUser.user_id
+// TO DO : Make sure it is -  currentUser.user_id???
+// TO DO: Work on sessions 
+// work on authentication flow 
+// add sign up page and make sql database function 
+
 
 
 // check that db is connected 
@@ -17,7 +21,6 @@ app.use(session({
     saveUninitialized: false
 
 }));
-
 
 
 
@@ -45,7 +48,6 @@ var bodyParser = require('body-parser');
 const fs = require('fs');
 
 app.use(express.static(__dirname + '/public'));
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -86,9 +88,11 @@ app.post('/', async (req, res) => {
         if (user.twofa_enabled){
             req.session.tempUser = user
             console.log("TEMP USER SET:", req.session.tempUser);
-            return res.send("Enter 2FA code")
+            return res.json({twofa: true})
             
         }
+        // if 2fa not enabled do something else 
+
         // Normal login
 
         req.session.user = user
@@ -147,6 +151,8 @@ app.post('/verify-2fa', async (req, res) => {
     });
 
     console.log("SESSION:", req.session);
+    console.log("TEMP USER:", req.session.tempUser);
+
     if (verified) {
         req.session.user = user;
         req.session.tempUser = null;

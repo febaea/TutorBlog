@@ -365,3 +365,52 @@ legend{
 #postForm button[type=submit]:hover {
     background-color: #f2875c;
 }
+
+/* 2fa.html styling */
+.verify_body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f4f4f4;
+}
+
+.twofa_container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 300px;
+}
+
+.code_input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 3px;
+}
+
+.verify_b {
+    margin-top: 15px;
+    padding: 10px;
+    width: 100%;
+    background: #f2875c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.verify_b:hover {
+    background: #e06f45;
+}
+
+.msg {
+    margin-top: 10px;
+    font-size: 14px;
+    color: red;
+}

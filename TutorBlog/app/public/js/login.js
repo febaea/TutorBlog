@@ -17,17 +17,20 @@ loginForm.onsubmit = async (e) => {
         })
     });
 
-    const result = await response.text();
+    const result = await response.json();
+    console.log(result)
 
-    alert(result);
-
-    if (result === "Logged in") {
+    if (result.success) {
         window.location.href = '../html/index.html';
+    } else if (result.twofa){
+        window.location.href = '../html/2fa.html';
+    } else{
+        alert("Invalid login")
     }
 
-    if (result === "Enter 2FA code") {
-        window.location.href = '../html/2fa.html';
-    }
+    // if (result === "Enter 2FA code") {
+    //     window.location.href = '../html/2fa.html';
+    // }
 };
 
 // loginForm.onsubmit = async (e) => {
