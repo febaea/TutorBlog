@@ -1,5 +1,5 @@
-const pool = require('./db'); 
 const express = require('express')
+const pool = require('./db'); 
 const app = express();
 const port = 3000;
 // TO DO : Make sure db doesn't store passwords as plain text - include hashing 
@@ -7,6 +7,17 @@ const port = 3000;
 
 
 // check that db is connected 
+const speakeasy = require('speakeasy');
+const QRcode = require('qrcode');
+const session = require('express-session');
+
+app.use(session({
+    secret: 'secretKey',
+    resave: false,
+    saveUninitialized: false
+
+}));
+
 
 
 
@@ -54,7 +65,7 @@ let data = JSON.stringify(login_attempt);
 fs.writeFileSync(__dirname + '/public/json/login_attempt.json', data);
 
 // Store who is currently logged in
-let currentUser = null;
+//let currentUser = null;
 
 
 app.post('/', async (req, res) => {
@@ -63,16 +74,40 @@ app.post('/', async (req, res) => {
 
     try{
         const result = await pool.query(
-            'SELECT * FROM users where username = $1 AND password = $2'
+            'SELECT * FROM users where username = $1 AND password = $2', 
             [username, password]
         );
-        if (result.rows.length === 1) {
-            currentUser = result.rows[0];
-
-            res.sendFile(__dirname + '/public/html/index.html');
-        } else {
-            res.sendFile(__dirname + '/public/html/login.html');
+        const user = result.rows[0]
+        if (!user){
+            return res.json({success: false});
         }
+
+        //If 2FA enabled
+        if (user.twofa_enabled){
+            req.session.tempUser = user
+            console.log("TEMP USER SET:", req.session.tempUser);
+            return res.send("Enter 2FA code")
+            
+        }
+        // Normal login
+
+        req.session.user = user
+        return res.json({success: true});
+        
+        // if (result.rows.length === 1) {
+        //     currentUser = result.rows[0];
+
+        //     res.sendFile(__dirname + '/public/html/index.html');
+        // } else {
+        //     res.sendFile(__dirname + '/public/html/login.html');
+        // }
+        // if(currentUser.twofa_enabled) {
+        //     req.session.tempUser = user;
+        //     return res.send("Enter 2 FA Code");
+        // }
+        // req.session.user = user;
+        // res.send("Logged in");
+
 
     } catch (err) {
         console.error(err);
@@ -83,6 +118,44 @@ app.post('/', async (req, res) => {
 
 
 }); 
+
+
+// setup 2fa route (qr code generation)
+app.get('/setup-2fa/:userId', async (req, res) => {
+    const secret = speakeasy.generateSecret({
+        name: "TutorBlog"
+    });
+
+    await pool.query(
+        'UPDATE users SET twofa_secret=$1 WHERE user_id=$2',
+        [secret.base32, req.params.userId]
+    );
+
+    QRcode.toDataURL(secret.otpauth_url, (err, url) => {
+        res.send(`<img src="${url}">`);
+    });
+});
+
+app.post('/verify-2fa', async (req, res) => {
+    const user = req.session.tempUser;
+    const token = req.body.token;
+
+    const verified = speakeasy.totp.verify({
+        secret: user.twofa_secret,
+        encoding: 'base32',
+        token: token
+    });
+
+    console.log("SESSION:", req.session);
+    if (verified) {
+        req.session.user = user;
+        req.session.tempUser = null;
+        res.send("2FA success - logged in");
+    } else {
+        res.status(401).send("Invalid 2FA code");
+    }
+});
+
 /*
 // Login POST request
 app.post('/',function(req, res){
@@ -190,19 +263,25 @@ app.post('/makepost', function(req, res) {
  app.post('/makepost', async (req, res) => {
     let curDate = new Date();
 
+    if (!req.session.user) {
+        return res.status(401).send("Not logged in");
+    }
+
+    const userId = req.session.user.user_id;
+
     try {
         if (!req.body.postId) {
             await pool.query(
                 `INSERT INTO posts (user_id, title, content)
                  VALUES ($1, $2, $3)`,
-                [currentUser.user_id, req.body.title_field, req.body.content_field]
+                [req.session.user.user_id, req.body.title_field, req.body.content_field]
             );
         } else {
             await pool.query(
                 `UPDATE posts
                  SET title = $1, content = $2
                  WHERE post_id = $3 AND user_id = $4`,
-                [req.body.title_field, req.body.content_field, req.body.postId, currentUser.user_id]
+                [req.body.title_field, req.body.content_field, req.body.postId, req.session.user.user_id]
             );
         }
 
@@ -223,7 +302,7 @@ app.post('/makepost', function(req, res) {
     try {
         await pool.query(
             `DELETE FROM posts WHERE post_id = $1 AND user_id = $2`,
-            [req.body.postId, currentUser.user_id]
+            [req.body.postId, req.session.user.user_id]
         );
 
         res.sendFile(__dirname + "/public/html/my_posts.html");
@@ -259,7 +338,7 @@ app.get('/test-insert-user', async (req, res) => {
     try {
         const result = await pool.query(
             `INSERT INTO users (first_name, last_name, username, email, password, role)
-             VALUES ('Test', 'User', 'testuser123', 'test@test.com', '1234', 'student')
+             VALUES ('Test2', 'User2', 'testuser1234', 'test2@test.com', '2345', 'student')
              RETURNING *`
         );
 

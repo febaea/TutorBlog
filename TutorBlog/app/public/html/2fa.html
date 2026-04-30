@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Two-Factor Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f4f4f4;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 300px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 3px;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px;
+            width: 100%;
+            background: #f2875c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #e06f45;
+        }
+
+        .msg {
+            margin-top: 10px;
+            font-size: 14px;
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Two-Factor Authentication</h2>
+    <p>Enter the 6-digit code from your authenticator app</p>
+
+    <input type="text" id="token" maxlength="6" placeholder="123456">
+
+    <button onclick="verify2FA()">Verify</button>
+
+    <div class="msg" id="msg"></div>
+</div>
+
+<script>
+async function verify2FA() {
+    const token = document.getElementById('token').value;
+    const msg = document.getElementById('msg');
+
+    msg.innerText = "";
+
+    if (token.length !== 6) {
+        msg.innerText = "Code must be 6 digits";
+        return;
+    }
+
+    try {
+        const response = await fetch('/verify-2fa', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token })
+        });
+
+        const text = await response.text();
+
+        if (response.ok) {
+            msg.style.color = "green";
+            msg.innerText = "Success! Redirecting...";
+
+            setTimeout(() => {
+                window.location.href = '/html/index.html';
+            }, 1000);
+        } else {
+            msg.style.color = "red";
+            msg.innerText = text;
+        }
+
+    } catch (err) {
+        msg.innerText = "Server error. Try again.";
+    }
+}
+</script>
+
+</body>
+</html>
