@@ -11,3 +11,23 @@ Posts can be edited or deleted from the "My Posts" page. Editing posts is handle
 
 ---- Loading posts -----
 Posts are loaded from a local JSON file called posts.json. Posts are loaded on three different pages: "Home", "Posts", and "My Posts".
+
+---- Database ----
+
+npm install dotenv
+
+create .env folder in TutorBlog and use .env.example as a template
+change password to postgres master password
+
+run app
+
+go to http://localhost:3000/db-test
+should see something like: 
+{
+  "success": true,
+  "time": {
+    "now": "2026-05-08T..."
+  }
+}
+
+copy code from schema and data .sql in query tool
