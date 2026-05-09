@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express')
 const pool = require('./db'); 
 const app = express();
@@ -343,8 +345,9 @@ app.post('/makepost', function(req, res) {
 app.get('/test-insert-user', async (req, res) => {
     try {
         const result = await pool.query(
-            `INSERT INTO users (first_name, last_name, username, email, password, role)
-             VALUES ('Test2', 'User2', 'testuser1234', 'test2@test.com', '2345', 'student')
+            `INSERT INTO users (id, name, email, password)
+             VALUES
+             (100, 'Alice Smith', 'alice@test.com', 'temp123')
              RETURNING *`
         );
 
@@ -359,8 +362,9 @@ app.get('/test-insert-user', async (req, res) => {
 app.get('/test-post', async (req, res) => {
     try {
         const result = await pool.query(
-            `INSERT INTO posts (user_id, title, content)
-             VALUES (1, 'Hello Post', 'This is a test post')
+            `INSERT INTO posts (id, author_id, title, content, created_at)
+             VALUES
+             (100, 100, 'Test Post', 'This is a Test Post', '3/11/2024, 19:14:16')
              RETURNING *`
         );
 
