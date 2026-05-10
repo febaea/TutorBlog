@@ -1,7 +1,7 @@
-INSERT INTO users (id, name, email, password)
+INSERT INTO users (id, username,first_name, last_name, email, password)
 VALUES
-(1, 'Alice Smith', 'alice@test.com', 'temp123'),
-(2, 'Bob Jacobs', 'bob@test.com', 'temp123');
+(1, 'alice_smith', 'Alice', 'Smith', 'alice@test.com', 'temp123'),
+(2, 'bob_jacobs', 'Bob', 'Jacobs', 'bob@test.com', 'temp123');
 
 INSERT INTO roles (id, name)
 VALUES
