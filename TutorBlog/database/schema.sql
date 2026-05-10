@@ -58,3 +58,28 @@ CREATE TABLE posts (
     FOREIGN KEY (author_id) REFERENCES users(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE tutor_profiles (
+    user_id BIGINT PRIMARY KEY,
+    subject VARCHAR(100) NOT NULL,
+    rating DECIMAL(2,1) DEFAULT 0.0,
+
+    FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+);
+CREATE TABLE tutor_achievements (
+    id BIGSERIAL PRIMARY KEY,
+    tutor_id BIGINT NOT NULL,
+    achievement TEXT NOT NULL,
+
+    FOREIGN KEY (tutor_id) REFERENCES tutor_profiles(user_id)
+        ON DELETE CASCADE
+);
+CREATE TABLE tutor_qualifications (
+    id BIGSERIAL PRIMARY KEY,
+    tutor_id BIGINT NOT NULL,
+    qualification TEXT NOT NULL,
+
+    FOREIGN KEY (tutor_id) REFERENCES tutor_profiles(user_id)
+        ON DELETE CASCADE
+);

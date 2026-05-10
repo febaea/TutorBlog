@@ -191,25 +191,42 @@ function setupSearch() {
   if (!searchBtn) return;
 
   function performSearch() {
-    const query = searchInput.value.toLowerCase();
-    const filteredTutors = tutors.filter(
-      (tutor) =>
-        tutor.subject.toLowerCase().includes(query) ||
-        tutor.name.toLowerCase().includes(query) ||
-        (tutor.qualifications &&
-          tutor.qualifications.some((q) => q.toLowerCase().includes(query))),
-    );
+    const query = searchInput.value.trim();
 
-    if (filteredTutors.length > 0) {
-      searchResults.innerHTML =
-        '<h3 style="margin: 20px 0 10px 0;">Search Results:</h3>';
-      filteredTutors.forEach((tutor) => {
-        searchResults.appendChild(createTutorCard(tutor));
-      });
-    } else {
-      searchResults.innerHTML =
-        '<p class="post" style="padding: 20px;">No tutors found for your search. Try another subject!</p>';
+    // Clear previous results if query is empty and makes it so no unnecessary API calls are made
+    if (!query) {
+      searchResults.innerHTML = "";
+      return;
     }
+
+    //Call the search API endpoint with the query and display results
+    fetch(`/tutors/search?q=${encodeURIComponent(query)}`)
+      .then((response) => response.json())
+      .then((results) => {
+        if (results.length > 0) {
+          searchResults.innerHTML =
+            '<h3 style="margin: 20px 0 10px 0;">Search Results:</h3>';
+          results.forEach((tutor) => {
+            const tutorCard = {
+              id: tutor.id,
+              name: tutor.username,
+              subject: tutor.subject,
+              rating: tutor.rating,
+              achievements: tutor.achievements || [],
+              qualifications: tutor.qualifications || [],
+            };
+            searchResults.appendChild(createTutorCard(tutorCard));
+          });
+        } else {
+          searchResults.innerHTML =
+            '<p class="post" style="padding: 20px;">No tutors found for your search. Try another subject!</p>';
+        }
+      })
+      .catch((error) => {
+        console.error("Search error:", error);
+        searchResults.innerHTML =
+          '<p class="post" style="padding: 20px;">Error performing search. Please try again.</p>';
+      });
   }
 
   searchBtn.onclick = performSearch;
