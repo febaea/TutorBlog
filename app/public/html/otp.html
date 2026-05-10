@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Your Email</title>
+    <meta charset="utf-8">
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h2>Verify Your Email</h2>
+    <p>Enter the 6-digit code sent to <strong>{{email}}</strong></p>
+    
+
+    <form action="/verify-registration" method="POST">
+
+        <input type="hidden" name="email" value="{{email}}">
+
+        <input type="hidden" name="userName" value="{{userName}}">
+
+        <input type="hidden" name="password" value="{{password}}">
+
+        <input 
+        type="text" 
+        name="otp" 
+        placeholder="Enter verification code"
+        required>
+
+        <button type="submit">
+        Verify
+        </button>
+
+    </form>
+    <form action="/resend-otp" method="POST" style="margin-top: 20px;">
+        <input type="hidden" name="email" value="{{email}}">
+        <input type="hidden" name="userName" value="{{userName}}">
+        <input type="hidden" name="password" value="{{password}}">
+        <button type="submit">Resend Code</button>
+    </form>
+    
+    <p><a href="/">Back to Login</a></p>
+</body>
+</html>
