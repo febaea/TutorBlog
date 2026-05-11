@@ -365,6 +365,30 @@ app.get("/tutors/search", async (req, res) => {
   }
 });
 
+app.get("/posts", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+        SELECT 
+            posts.id,
+            posts.author_id,
+            posts.title,
+            posts.content,
+            posts.featured_image_url,
+            posts.created_at,
+            users.username
+        FROM posts
+        JOIN users ON posts.author_id = users.id
+        `,
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
 //  ------- TESTS --------  :
 app.get("/test-insert-user", async (req, res) => {
   try {
