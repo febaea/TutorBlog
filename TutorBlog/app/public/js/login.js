@@ -24,13 +24,13 @@ loginForm.onsubmit = async (e) => {
         window.location.href = '../html/index.html';
     } else if (result.twofa){
         window.location.href = '../html/2fa.html';
+    }else if (result.setup2fa) {
+        window.location.href = '../html/setup2fa.html';
     } else{
         alert("Invalid login")
     }
 
-    // if (result === "Enter 2FA code") {
-    //     window.location.href = '../html/2fa.html';
-    // }
+
 };
 
 // loginForm.onsubmit = async (e) => {

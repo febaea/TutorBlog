@@ -1,3 +1,4 @@
+const { generateSecret, generateTOTP, verifyTOTP, generateOtpAuthUrl } = require("./public/js/totp")
 require("dotenv").config();
 
 const express = require("express");
@@ -7,11 +8,13 @@ const port = 3000;
 // TO DO : Make sure db doesn't store passwords as plain text - include hashing
 // TO DO : Make sure it is -  currentUser.user_id???
 // TO DO: Work on sessions
+// TO DO - change code to generate number code instead of using library 
+// TO DO: Add option of third party app to scan qr code omn login page 
 // work on authentication flow
 // add sign up page and make sql database function
 
 // check that db is connected
-const speakeasy = require("speakeasy");
+// const speakeasy = require("speakeasy");
 const QRcode = require("qrcode");
 const session = require("express-session");
 
@@ -20,6 +23,11 @@ app.use(
     secret: "secretKey",
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false
+    }
   }),
 );
 
@@ -80,63 +88,83 @@ app.post("/", async (req, res) => {
       return res.json({ success: false });
     }
 
-    //If 2FA enabled
-    if (user.twofa_enabled) {
+    //If 2FA not yet set up (false) - send to setup page 
+    if (!user.twofa_enabled && !user.twofa_secret){
       req.session.tempUser = user;
-      console.log("TEMP USER SET:", req.session.tempUser);
-      return res.json({ twofa: true });
+      return res.json({setup2fa: true})
     }
-    // if 2fa not enabled do something else
+    // if (user.twofa_enabled ) {
+    //   req.session.tempUser = user;
+    //   console.log("TEMP USER SET:", req.session.tempUser);
+    //   return res.json({ twofa: true });
+    // }
+   // If 2FA enabled and secret exists. -send to verigy page 
+   if(user.twofa_enabled && user.twofa_secret){
+    req.session.tempUser = user;
+    return res.json({twofa:true})
+   }
 
-    // Normal login
 
+    // 2FA not enabled, no secret code - normal login 
     req.session.user = user;
     return res.json({ success: true });
 
-    // if (result.rows.length === 1) {
-    //     currentUser = result.rows[0];
-
-    //     res.sendFile(__dirname + '/public/html/index.html');
-    // } else {
-    //     res.sendFile(__dirname + '/public/html/login.html');
-    // }
-    // if(currentUser.twofa_enabled) {
-    //     req.session.tempUser = user;
-    //     return res.send("Enter 2 FA Code");
-    // }
-    // req.session.user = user;
-    // res.send("Logged in");
   } catch (err) {
     console.error(err);
     res.status(500).send("Database error");
   }
 });
 
+// returns session user:
+app.get("/me", (req, res) => {
+  console.log("Session at /me:", req.session);
+  if (!req.session.tempUser) {
+    return res.status(401).json({ message: "Not logged in" });
+  }
+  res.json({ userId: req.session.tempUser.id });
+});
+
 // setup 2fa route (qr code generation)
 app.get("/setup-2fa/:userId", async (req, res) => {
-  const secret = speakeasy.generateSecret({
-    name: "TutorBlog",
-  });
+  const user = req.session.tempUser;
+  // const secret = speakeasy.generateSecret({
+  //   name: "TutorBlog",
+  // });
+  // change code here - done 
+  const secret = generateSecret();
 
-  await pool.query("UPDATE users SET twofa_secret=$1 WHERE user_id=$2", [
-    secret.base32,
-    req.params.userId,
+  await pool.query("UPDATE users SET twofa_secret=$1 WHERE id=$2", [
+    secret,
+    parseInt(req.params.userId),
   ]);
+   // Update session with the new secret so confirm route can read it
+  if (req.session.tempUser) {
+    // req.session.tempUser.twofa_secret = secret.base32;
+    req.session.tempUser.twofa_secret = secret;
+  }
 
-  QRcode.toDataURL(secret.otpauth_url, (err, url) => {
-    res.send(`<img src="${url}">`);
+  const otpAuthUrl = generateOtpAuthUrl(secret, user.username);
+
+  QRcode.toDataURL(otpAuthUrl, (err, url) => {
+    res.json({ qrCode: url });
   });
+
+
+  // QRcode.toDataURL(secret.otpauth_url, (err, url) => {
+  //   res.json({qrCode: url});
+  // });
 });
 
 app.post("/verify-2fa", async (req, res) => {
   const user = req.session.tempUser;
   const token = req.body.token;
 
-  const verified = speakeasy.totp.verify({
-    secret: user.twofa_secret,
-    encoding: "base32",
-    token: token,
-  });
+  // const verified = speakeasy.totp.verify({
+  //   secret: user.twofa_secret,
+  //   encoding: "base32",
+  //   token: token,
+  // });
+  const verified = verifyTOTP(user.twofa_secret, req.body.token);
 
   console.log("SESSION:", req.session);
   console.log("TEMP USER:", req.session.tempUser);
@@ -144,9 +172,37 @@ app.post("/verify-2fa", async (req, res) => {
   if (verified) {
     req.session.user = user;
     req.session.tempUser = null;
-    res.send("2FA success - logged in");
+    // res.send("2FA success - logged in");
+    res.json({success: true})
   } else {
     res.status(401).send("Invalid 2FA code");
+  }
+});
+app.post("/confirm-2fa-setup", async (req, res) => {
+  console.log("Session at /confirm:", req.session);
+  const user = req.session.tempUser;
+  if (!user) return res.status(401).json({ message: "Session expired" });
+
+  const token = req.body.token;
+
+  // const verified = speakeasy.totp.verify({
+  //   secret: user.twofa_secret,
+  //   encoding: "base32",
+  //   token: token,
+  //   window: 1
+  // });
+  const verified = verifyTOTP(user.twofa_secret, req.body.token);
+
+  if (verified) {
+    await pool.query(
+      "UPDATE users SET twofa_enabled = TRUE WHERE id = $1",
+      [parseInt(user.id)]
+    );
+    req.session.user = { ...user, twofa_enabled: true };
+    req.session.tempUser = null;
+    return res.json({ success: true });
+  } else {
+    return res.status(401).json({ message: "Code incorrect — try scanning again" });
   }
 });
 
