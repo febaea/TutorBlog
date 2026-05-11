@@ -394,7 +394,7 @@ legend{
     letter-spacing: 3px;
 }
 
-.verify_b {
+.auth-btn {
     margin-top: 15px;
     padding: 10px;
     width: 100%;
@@ -405,7 +405,7 @@ legend{
     font-size: 16px;
 }
 
-.verify_b:hover {
+.auth-btn:hover {
     background: #e06f45;
 }
 

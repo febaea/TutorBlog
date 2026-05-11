@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Two-Factor Authentication</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <script src="../js/setup2fa.js" defer></script>
+    
+    
+</head>
+
+<body class = verify_body>
+    <div class="twofa_container">
+        <button class="auth-btn" onclick="startSetup()">
+          <img src="microsoft-authenticator-icon.png" alt="">
+          Set up with Microsoft Authenticator
+        </button>
+        <!-- room to add Google Authenticator etc later -->
+      </div>
+      
+      <div id="qr-section" style="display:none">
+        <p>Scan this with Microsoft Authenticator:</p>
+        <img id="qrImage" src="" alt="QR Code">
+        <input type="text" id="token" maxlength="6" placeholder="Enter 6-digit code">
+        <button  class = "auth-btn" onclick="confirmSetup()">Verify</button>
+        <p id="msg"></p>
+      </div>
+</body>
+</html>

@@ -6,6 +6,8 @@
     "start": "node app/app.js"
   },
   "dependencies": {
+    "crypto": "^1.0.1",
+    "dotenv": "^17.4.2",
     "express-session": "^1.19.0",
     "pg": "^8.20.0",
     "qrcode": "^1.5.4",

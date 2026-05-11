@@ -8,7 +8,7 @@ async function verify2FA() {
         msg.innerText = "Code must be 6 digits";
         return;
     }
-
+   
     try {
         const response = await fetch('/verify-2fa', {
             method: 'POST',
