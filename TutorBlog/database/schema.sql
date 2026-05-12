@@ -4,7 +4,7 @@ CREATE TABLE users (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL, 
     twofa_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     twofa_secret  VARCHAR(255)
     

@@ -2,22 +2,31 @@ const { generateSecret, generateTOTP, verifyTOTP, generateOtpAuthUrl } = require
 require("dotenv").config();
 
 const express = require("express");
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const pool = require("./db");
 const postsRouter = require("./posts");
+const emailController = require('./email');
+const helmet = require('helmet')
+const fs = require("fs");
 const app = express();
 const port = 3000;
-// TO DO : Make sure db doesn't store passwords as plain text - include hashing
-// TO DO : Make sure it is -  currentUser.user_id???
-// TO DO: Work on sessions
-// TO DO - change code to generate number code instead of using library 
-// TO DO: Add option of third party app to scan qr code omn login page 
-// work on authentication flow
-// add sign up page and make sql database function
-
-// check that db is connected
-// const speakeasy = require("speakeasy");
 const QRcode = require("qrcode");
 const session = require("express-session");
+var bodyParser = require("body-parser");
+
+
+
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(helmet());
+app.use(express.static(__dirname + "/public"));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cookieParser());
+
 
 app.use(
   session({
@@ -48,14 +57,7 @@ app.get("/db-test", async (req, res) => {
   }
 });
 
-// check
 
-var bodyParser = require("body-parser");
-const fs = require("fs");
-
-app.use(express.static(__dirname + "/public"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 // Landing page
 app.get("/", (req, res) => {
@@ -207,6 +209,44 @@ app.post("/confirm-2fa-setup", async (req, res) => {
   }
 });
 
+app.get('/register', (req, res) => {
+  res.sendFile(__dirname + '/public/html/register.html');
+  });
+
+
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+  const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+  if (existing.rows.length > 0) {
+  return res.send('<h2>Email already registered</h2><a href="/register">Try again</a>');
+  }
+  req.body.userName = email.split('@')[0];
+  emailController.sendController(req, res);
+  } catch (error) {
+  console.error(error);
+  res.send('Registration error');
+  }
+  });
+  
+  app.post('/verify-registration', emailController.verifyController, async (req, res) => {
+  const { userName, email, password } = req.userData;
+  const normalizedEmail = email.trim().toLowerCase();
+  try {
+  await db.query(
+  'INSERT INTO users (email, username, password_hash, created_at) VALUES ($1, $2, $3, NOW())',
+  [email, userName, password]
+  );
+  res.send(`
+  <h2>Registration Successful!</h2>
+  <p>Welcome to TutorHub!.</p>
+  <a href="/">Click here to login</a>
+  `);
+  } catch (error) {
+  console.error(error);
+  res.send('Registration failed');
+  }
+  });
 /*
 // Login POST request
 app.post('/',function(req, res){
