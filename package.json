@@ -1,0 +1,18 @@
+{
+  "devDependencies": {
+    "express": "^4.21.1"
+  },
+  "scripts": {
+    "start": "node app/app.js"
+  },
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "dotenv": "^17.4.2",
+    "express-session": "^1.19.0",
+    "multer": "^2.1.1",
+    "nodemailer": "^8.0.7",
+    "pg": "^8.20.0",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0"
+  }
+}
