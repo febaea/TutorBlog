@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Login</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h2>Verification Required</h2>
+    <p>Enter the 6-digit code sent to <strong>{{email}}</strong></p>
+    
+    {{msg}}
+    
+    <form action="/verify-login" method="POST">
+        <input type="hidden" name="email" value="{{email}}">
+        <input type="hidden" name="password" value="{{password}}">
+        <input type="hidden" name="token" value="{{token}}">
+        <input type="text" name="otp2" placeholder="000000" maxlength="6" required autofocus>
+        <br>
+        <button type="submit">Verify & Login</button>
+    </form>
+    
+    <form action="/resend-login-otp" method="POST" style="margin-top: 20px;">
+        <input type="hidden" name="email" value="{{email}}">
+        <input type="hidden" name="password" value="{{password}}">
+        <input type="hidden" name="token" value="{{token}}">
+        <button type="submit">Resend Code</button>
+    </form>
+    
+    <p><a href="/">Back to Login</a></p>
+</body>
+</html>
