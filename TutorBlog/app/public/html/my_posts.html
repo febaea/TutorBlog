@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title> Foodies 'R' Us </title>
+        <title> TutorHub </title>
         <meta charset="utf-8">
-        <link rel="icon" type="image/x-icon" href="../imgs/foodie.ico">
         <link rel="stylesheet" href="../css/style.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <script src="../js/my_posts.js" defer></script>
@@ -12,7 +11,7 @@
     <body>
         <header>
             <a href="../html/index.html"><img id="logo" src="../imgs/logo.png"></a>
-            <h1>Foodies 'R' Us</h1>
+            <h1> TutorHub </h1>
             <div class="dropdown">
                 <button id="login_link" href="#">Username <i class="fa fa-caret-down"></i></button>
                 <div class="dropdown-content">
@@ -23,27 +22,31 @@
 
         <nav>
             <ul>
-                <li><a href="../html/index.html">Home</a></li>
                 <li><a href="../html/posts.html">Latest Posts</a></li>
                 <li class="active"><a href="../html/my_posts.html">My Posts</a></li>
+                <li><a href="../html/tutor_profile.html">My Profile</a></li>
+
             </ul>
         </nav>
 
         <main>
             <section>
                 <h2>Share your thoughts</h2>
-                <p>Get chatting with your fellow Foodies!</p>
+                <p>Get chatting with your fellow Tutors </p>
 
-                <form action="/makepost" method="post" id="postForm" name="postForm">
+                <form action="/makepost" method="post" id="postForm" name="postForm" enctype="multipart/form-data">
                     <fieldset>
                         <legend>Compose a Post</legend>
-                            <label for="title_field">Post Title:</label>
-                            <input id="title_field" name="title_field" type="text" placeholder="Title" required>
+                            <label for="title_field">Post Title:*</label>
+                            <input id="title_field" name="title_field" type="text" placeholder="Title" maxlength="255" required>
 
-                            <label for="content_field">Post Content:</label>
-                            <textarea id="content_field" name="content_field" placeholder="Write your thoughts here.." required></textarea>
+                            <label for="content_field">Post Content:*</label>
+                            <textarea id="content_field" name="content_field" placeholder="Write your thoughts here.." mazlength="50000" required></textarea>
                             <!-- <input id="content_field" name="content_field" type="text"> -->
 
+                            <label for="upload_field">Post File Upload: </label>
+                            <input type="file" name="upload_field" name="upload" accept=".pdf/application/pdf" placeholder="Upload your file here" />
+                            
                             <input id="postId" name="postId" type="hidden">
                             
                             <button type="submit" id="post_button">Post</button>
@@ -57,6 +60,8 @@
 
                 <i class="fa fa-search" aria-hidden="true"></i>
                 <input class="search_bar" id="search" name="search" type="text" placeholder="Search your posts...">
+                <div id="postsContainer">
+                </div>  
             </section>
         </main>
     </body>
