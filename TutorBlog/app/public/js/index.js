@@ -144,13 +144,28 @@ function createTutorCard(tutor) {
   card.style.margin = "15px";
   card.onclick = () => viewTutorProfile(tutor.id);
 
+  const achievementsHtml = tutor.achievements
+    ? tutor.achievements
+        .map((achievement) => `<p>${htmlEscape(achievement)}</p>`)
+        .join("")
+    : `<p>${htmlEscape("Experienced tutor")}</p>`;
+
+  const qualificationsHtml = tutor.qualifications
+    ? tutor.qualifications
+        .map((qualification) => `<p>${htmlEscape(qualification)}</p>`)
+        .join("")
+    : "";
+
   card.innerHTML = `
         <h3 style="color: #f56d36; margin-bottom: 10px;">${htmlEscape(tutor.name)}</h3>
         <div style="display: inline-block; background-color: #f56d36; color: white; padding: 5px 10px; border-radius: 5px; margin: 5px 0;">
             ${htmlEscape(tutor.subject)}
         </div>
         <div style="margin: 10px 0;"> ${tutor.rating} / 5.0</div>
-        <p>${htmlEscape(tutor.achievements ? tutor.achievements[0] : "Experienced tutor")}</p>
+        <strong>Achievements:</strong>
+        ${achievementsHtml}
+        <strong>Qualifications:</strong>
+        ${qualificationsHtml}
         <button class="link_btn" style="margin: 10px 0 0 0;">View Profile →</button>
     `;
 
