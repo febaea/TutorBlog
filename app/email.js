@@ -123,53 +123,53 @@ async function verifyController(req, res, next) {
 }
 
 // Send login OTP
-async function sendLoginController(req, res) {
-    let { email, password, token } = req.body;
-    email = email.trim().toLowerCase();
-    const otp = generateOTP(email);
+// async function sendLoginController(req, res) {
+//     let { email, password, token } = req.body;
+//     email = email.trim().toLowerCase();
+//     const otp = generateOTP(email);
     
-    var mailOptions = {
-        to: email,
-        subject: "Your Login Verification Code",
-        html: `<h3>Login Verification</h3>
-               <p>Your verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
-               <p>This code expires in 15 minutes.</p>`
-    };
+//     var mailOptions = {
+//         to: email,
+//         subject: "Your Login Verification Code",
+//         html: `<h3>Login Verification</h3>
+//                <p>Your verification code is: <strong style="font-size: 24px;">${otp}</strong></p>
+//                <p>This code expires in 15 minutes.</p>`
+//     };
     
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) return console.log(error);
+//     transporter.sendMail(mailOptions, (error, info) => {
+//         if (error) return console.log(error);
         
-        // Read and send the OTP2 HTML page
-        const otpPage = fs.readFileSync(path.join(__dirname, 'public/html/otp2.html'), 'utf8');
-        const filledPage = otpPage
-            .replace(/{{email}}/g, email)
-            .replace(/{{password}}/g, password)
-            .replace(/{{token}}/g, token);
+//         // Read and send the OTP2 HTML page
+//         const otpPage = fs.readFileSync(path.join(__dirname, 'public/html/otp2.html'), 'utf8');
+//         const filledPage = otpPage
+//             .replace(/{{email}}/g, email)
+//             .replace(/{{password}}/g, password)
+//             .replace(/{{token}}/g, token);
         
-        res.send(filledPage);
-    });
-}
+//         res.send(filledPage);
+//     });
+// }
 
 // Verify login OTP
-async function verifyLoginController(req, res) {
-    const { email, password, token, otp2 } = req.body;
+// async function verifyLoginController(req, res) {
+//     const { email, password, token, otp2 } = req.body;
     
-    if (verifyOTP(email, otp2)) {
-        res.cookie("jwt", token, {
-            httpOnly: false,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-             maxAge: 24 * 60 * 60 * 1000
-        });
-        res.redirect("/dashboard");
-    } else {
-        res.send(`
-            <h2>Invalid or Expired Code</h2>
-            <p>The verification code is incorrect or has expired.</p>
-            <p>Try logging in again.</p>
-        `);
-    }
-}
+//     if (verifyOTP(email, otp2)) {
+//         res.cookie("jwt", token, {
+//             httpOnly: false,
+//             secure: process.env.NODE_ENV === "production",
+//             sameSite: "strict",
+//              maxAge: 24 * 60 * 60 * 1000
+//         });
+//         res.redirect("/dashboard");
+//     } else {
+//         res.send(`
+//             <h2>Invalid or Expired Code</h2>
+//             <p>The verification code is incorrect or has expired.</p>
+//             <p>Try logging in again.</p>
+//         `);
+//     }
+// }
 
 // Resend registration OTP
 async function resendController(req, res) {
