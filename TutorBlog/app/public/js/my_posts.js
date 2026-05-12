@@ -1,121 +1,224 @@
 // Function to load posts made by user who is currently logged in
-async function loadPosts() {
+const postForm = document.getElementById("postForm");
+postForm.onsubmit = async (e) => {
+    e.preventDefault();
 
-    // Load posts data
-    const post_response = await fetch("../json/posts.json");
-    const post_data = await post_response.json();
+    const title = document.getElementById("title_field").value.trim();
+    const content = document.getElementById("content_field").value.trim();
+    const uploadInput = document.getElementById("upload_field");
 
-    // Load login data
-    const login_response = await fetch("../json/login_attempt.json");
-    const login_data = await login_response.json();
+    const file = uploadInput.files[0];
 
-    // Remove current posts
-    let postList = document.getElementById('myPosts');
+    //validations
+    if (!title || !content) {
+        alert("Title and content are required.");
+        return;
+    }
 
-    for(let i = 0; i < postList.children.length; i++) {
-        if(postList.children[i].nodeName == "article") {
-            postList.removeChild(postList.children[i]);
+    if (title.length > 255) {
+        alert("Title too long");
+        return;
+    }
+
+    if (content.length > 50000) {
+        alert("Post too long");
+        return;
+    }
+
+    //file size check
+    if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+            alert("PDF too large");
+            return;
         }
     }
 
-    // Add posts made by current user
-    for(let i = 0; i < post_data.length; i++) {
+    //Multipurpose Internet Mail Extensions or MIME type check
+    //validates nature and format of file
+    if (file.type !== "application/pdf") {
+        alert("Only PDFs allowed");
+        return;
+    }
+
+    // Disable button and show loading
+    const submitBtn = postForm.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = "Posting...";
+    submitBtn.disabled = true;
+
+    try{
+
+        //use FormData for files
+        const formData = new FormData();
+
+        formData.append("title", title);
+        formData.append("content", content);
+
+        if (file) {
+            formData.append("upload", file);
+        }
+
+        //Send to backend
+        const response = await fetch("/makepost", {
+            method: "POST", 
+            body: formData
+        });
+
+        //check if redirected (successful)
+        if (response.redirected) {
+            window.location.href = response.url;
+            //call function to load posts
+            return;
+        }
+
+        const result = await response.text();
+        alert(result);
+    
+    }
+    catch (error) {
+        console.error(error);
+        alert("Failed to share post. Make sure the server is running.");
+    }
+    finally {
+
+        //add button again
+        submitBtn.Btn.textContent = originalText;
+        sublitBtn.disabled = false;
+    }
+};
+
+
+
+
+// Function to load posts made by user who is currently logged in
+async function loadPosts() {
+
+    try {
         
-        let author = post_data[i].username;
+        //fetch posts from backend
+        const reponse = await fetch("./posts");
 
-        // Check usernames match on each post
-        if(author === login_data.username) {
-            let timestamp = post_data[i].timestamp;
-            let title = post_data[i].title;
-            let content = post_data[i].content;
-            let postId = post_data[i].postId;
+        if (!response.ok) {
+            throw new Error("Failed to load posts");
+        }
 
-            let postContainer = document.createElement('article');
-            postContainer.classList.add("post");
-            let fig = document.createElement('figure');
-            postContainer.appendChild(fig);
+        const posts = await response.json();
+        const postList = document.getElementById("postsContainer");
 
-            let postIdContainer = document.createElement("h6");
-            postIdContainer.textContent = postId;
-            postIdContainer.hidden = true;
-            postId.id = "postId";
-            postContainer.appendChild(postIdContainer);
+        //remove old posts
+        document.querySelectorAll(".post").forEach(post => post.remove());
 
-            let img = document.createElement('img');
-            let figcap = document.createElement('figcaption');
-            fig.appendChild(img);
-            fig.appendChild(figcap);
+        //add posts
+        posts.forEach(post => {
+
+            const postContainer = document.createElement('article');
+            postContainer.classList.add('post');
+        
+            const titleContainer = document.createElement('h3');
+            titleContainer.textContent = post.title;
+            postContainer.appendChild(titleContainer);
             
-            let titleContainer = document.createElement('h3');
-            titleContainer.textContent = title;
-            figcap.appendChild(titleContainer);
-            
-            let usernameContainer = document.createElement('h5');
-            usernameContainer.textContent = author;
-            figcap.appendChild(usernameContainer);
+            const timeContainer = document.createElement('h5');
+            const formattedDate =
+                new Date(post.created_at).toLocaleString();
 
-            let timeContainer = document.createElement('h5');
-            timeContainer.textContent = timestamp;
-            figcap.appendChild(timeContainer);
+            timeContainer.textContent = formattedDate;
+            postContainer.appendChild(timeContainer);
 
-            let contentContainer = document.createElement('p');
-            contentContainer.id = "content";
-            contentContainer.textContent = content;
-            figcap.appendChild(contentContainer);
+            const contentContainer = document.createElement('p');
 
-            let editBtn = document.createElement('button');
+            //textContent prevents XSS
+            //innerHTML executes javascript
+            contentContainer.textContent = post.content;
+
+            postContainer.appendChild(contentContainer);
+
+            //edit button
+            const editBtn = document.createElement('button');
             editBtn.classList.add('editBtn');
-            editBtn.textContent = "Edit";
-            editBtn.addEventListener("click", editPost);
+            editBtn.textContent = 'Edit';
+            editBtn.dataset.postId = post.id;
+            editBtn.addEventListener('click', editPost);
             postContainer.appendChild(editBtn);
 
-            let delBtn = document.createElement('button');
+            //delete button
+            const delBtn = document.createElement('button');
             delBtn.classList.add('delBtn');
-            delBtn.textContent = "Delete";
-            delBtn.addEventListener("click", deletePost);
+            delBtn.textContent = 'Delete';
+            delBtn.dataset.postId = post.id;
+            delBtn.addEventListener('click', deletePost);
             postContainer.appendChild(delBtn);
 
-            postList.insertBefore(postContainer, document.querySelectorAll("article")[0]);
-        }
+            //insert at top
+            postList.prepend(postContainer);
+        });       
+    } catch (error) {
+        console.error(error);
+
+        alert("Failed to load posts.")
     }
 }
 
 loadPosts();
 
 // Function to remove a post from the page after clicking delete - this is also reflected on the server side
-function deletePost(e) {
+async function deletePost(event) {
+    const postId = event.target.dataset.postId;
 
-    // Put post in object to be the body of fetch request
-    const post = {
-        postId:document.getElementsByTagName('h6')[0].textContent, 
-    };
+    //confirmation
+    const confirmed = confirm(
+        "Are you sure you want to delete this post?"
+    );
 
-    const requestHeaders = {
-        "Content-Type": "application/json"
-    };
+    if (!confirmed) {
+        return;
+    }
 
-    // Delete post
-  fetch('/deletepost', {
-    method: 'POST',
-    headers: requestHeaders,
-    body:JSON.stringify(post)
-  });
+    try {
+        const response = await fetch('/api/delete-post', {
+            method: 'POST',
 
-  // Hide element on button click so deletion appears immediate
-  e.target.parentNode.hidden = true;
+            headers: {
+                'Content-Type': 'application/json'
+            },
+
+            body: JSON.stringify({
+                postId
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error);
+        }
+        //reload posts
+        loadPosts();
+
+    } catch (error) {
+        console.error(error);
+        alert('Failed to delete post.');
+    }
 }
 
 // Function to edit post
-function editPost(e) {
+async function editPost(event) {
+    const postId = event.target.dataset.postId;
 
     // Get post that the user clicked on
-    let post = e.target.parentNode;
+    const article = event.target.closest('.post');
+
+    const title = article.querySelector('h3').textContent;
+
+    const content = article.querySelector('#content').textContent;
    
     // Fill out form fields with data grabbed from post
-    document.getElementById("title_field").value = post.getElementsByTagName('h3')[0].textContent;
-    document.getElementById("content_field").value = post.getElementsByTagName('p')[0].textContent;
-    document.getElementById("postId").value = post.getElementsByTagName('h6')[0].textContent;
+    document.getElementById('title_field').value = title;
+    document.getElementById('content_field').value = content;
 
+     //store editing post id
+    document.getElementById('postId').value = postId;
+    
     // Scroll user to post form
     document.getElementById("postForm").scrollIntoView({behavior: "smooth"});
 
