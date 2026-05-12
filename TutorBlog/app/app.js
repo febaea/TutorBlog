@@ -5,16 +5,9 @@ const express = require("express");
 const pool = require("./db");
 const app = express();
 const port = 3000;
-// TO DO : Make sure db doesn't store passwords as plain text - include hashing
-// TO DO : Make sure it is -  currentUser.user_id???
-// TO DO: Work on sessions
-// TO DO - change code to generate number code instead of using library 
-// TO DO: Add option of third party app to scan qr code omn login page 
-// work on authentication flow
-// add sign up page and make sql database function
 
-// check that db is connected
-// const speakeasy = require("speakeasy");
+// TO DO: Add option of third party app to scan qr code omn login page 
+
 const QRcode = require("qrcode");
 const session = require("express-session");
 
