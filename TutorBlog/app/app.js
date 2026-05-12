@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const express = require("express");
 const pool = require("./db");
+const postsRouter = require("./posts");
 const app = express();
 const port = 3000;
 
