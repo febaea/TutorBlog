@@ -7,7 +7,7 @@ import { htmlEscape } from "./htmlEscape.js";
 async function loadData() {
   try {
     // const tutorsResponse = await fetch("../json/tutors.json");
-    const tutorsResponse = await fetch("/tutors/search?q="); 
+    const tutorsResponse = await fetch("/tutors/search?q=");
     tutors = await tutorsResponse.json();
 
     const storiesResponse = await fetch("../json/success_stories.json");
@@ -152,7 +152,14 @@ function createTutorCard(tutor) {
         </div>
         <div style="margin: 10px 0;"> ${tutor.rating} / 5.0</div>
         <p>${htmlEscape(tutor.achievements ? tutor.achievements[0] : "Experienced tutor")}</p>
-        <button class="link_btn" style="margin: 10px 0 0 0;">View Profile →</button>
+        <h3 style="margin-top: 25px; color: #f56d36;"> Achievements</h3>
+                    <ul style="margin: 10px 0 10px 20px;">
+                        ${tutor.achievements.map((a) => `<li style="margin: 5px 0;">${htmlEscape(a)}</li>`).join("")}
+                    </ul>
+        <h3 style="margin-top: 25px; color: #f56d36;"> Qualifications</h3>
+            <ul style="margin: 10px 0 10px 20px;">
+                ${tutor.qualifications.map((a) => `<li style="margin: 5px 0;">${htmlEscape(a)}</li>`).join("")}
+            </ul>        <button class="link_btn" style="margin: 10px 0 0 0;">View Profile →</button>
     `;
 
   return card;
@@ -249,7 +256,6 @@ async function updateUIForUser() {
   const loginLink = document.getElementById("login_link");
   const myBookingsNav = document.getElementById("myBookingsNav");
 
-  
   // const userData = localStorage.getItem("currentUser");
   // if (userData) {
   //   currentUser = JSON.parse(userData);
@@ -274,13 +280,15 @@ async function updateUIForUser() {
 
       if (loginBtn) loginBtn.style.display = "none";
       if (logoutBtn) logoutBtn.style.display = "block";
-      if (loginLink) loginLink.innerHTML = `${data.username} <i class="fa fa-caret-down"></i>`;
+      if (loginLink)
+        loginLink.innerHTML = `${data.username} <i class="fa fa-caret-down"></i>`;
       if (myBookingsNav) myBookingsNav.style.display = "block";
     } else {
       // Not logged in
       if (loginBtn) loginBtn.style.display = "block";
       if (logoutBtn) logoutBtn.style.display = "none";
-      if (loginLink) loginLink.innerHTML = 'Account <i class="fa fa-caret-down"></i>';
+      if (loginLink)
+        loginLink.innerHTML = 'Account <i class="fa fa-caret-down"></i>';
       if (myBookingsNav) myBookingsNav.style.display = "none";
     }
   } catch (err) {
@@ -303,5 +311,4 @@ document.addEventListener("DOMContentLoaded", () => {
   loadData();
   setupSearch();
   updateUIForUser();
-
 });

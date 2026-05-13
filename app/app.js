@@ -1,11 +1,16 @@
-const { generateSecret, generateTOTP, verifyTOTP, generateOtpAuthUrl } = require("./public/js/totp")
+const {
+  generateSecret,
+  generateTOTP,
+  verifyTOTP,
+  generateOtpAuthUrl,
+} = require("./public/js/totp");
 require("dotenv").config();
 
 const express = require("express");
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');        
-const cookieParser = require('cookie-parser');
-const emailController = require('./email');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const emailController = require("./email");
 const pool = require("./db");
 const postsRouter = require("./posts");
 const app = express();
@@ -13,8 +18,8 @@ const port = 3000;
 // TO DO : Make sure db doesn't store passwords as plain text - include hashing
 // TO DO : Make sure it is -  currentUser.user_id???
 // TO DO: Work on sessions
-// TO DO - change code to generate number code instead of using library 
-// TO DO: Add option of third party app to scan qr code omn login page 
+// TO DO - change code to generate number code instead of using library
+// TO DO: Add option of third party app to scan qr code omn login page
 // work on authentication flow
 // add sign up page and make sql database function
 
@@ -24,7 +29,6 @@ const QRcode = require("qrcode");
 const session = require("express-session");
 var bodyParser = require("body-parser");
 const fs = require("fs");
-
 
 app.get("/db-test", async (req, res) => {
   try {
@@ -44,7 +48,7 @@ app.get("/db-test", async (req, res) => {
 
 // check
 
-//Middleware 
+//Middleware
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -58,17 +62,22 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: false
-    }
+      secure: false,
+    },
   }),
 );
 
 // JWT helpers
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, username: user.username, email: user.email, role: user.role },
+    {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    },
     process.env.JWT_SECRET || "jwt_secret_key",
-    { expiresIn: "2h" } //change to 2 hours?
+    { expiresIn: "2h" }, //change to 2 hours?
   );
 }
 
@@ -77,7 +86,7 @@ function setTokenCookie(res, token) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge:  2 * 60 * 60 * 1000 
+    maxAge: 2 * 60 * 60 * 1000,
   });
 }
 
@@ -85,19 +94,23 @@ function requireAuth(req, res, next) {
   const token = req.cookies.jwt;
   if (!token) return res.redirect("/");
 
-  jwt.verify(token, process.env.JWT_SECRET || "jwt_secret_key", (err, decoded) => {
-    if (err) return res.redirect("/");
-    req.user = decoded; // { id, username, email }
-    next();
-  });
+  jwt.verify(
+    token,
+    process.env.JWT_SECRET || "jwt_secret_key",
+    (err, decoded) => {
+      if (err) return res.redirect("/");
+      req.user = decoded; // { id, username, email }
+      next();
+    },
+  );
 }
-
-
-
 
 // Reset login_attempt.json when server restarts
 let login_attempt = { username: "null", password: "null" };
-fs.writeFileSync(__dirname + "/public/json/login_attempt.json", JSON.stringify(login_attempt));
+fs.writeFileSync(
+  __dirname + "/public/json/login_attempt.json",
+  JSON.stringify(login_attempt),
+);
 
 // let data = JSON.stringify(login_attempt);
 // fs.writeFileSync(__dirname + "/public/json/login_attempt.json", data);
@@ -115,25 +128,24 @@ app.get("/", (req, res) => {
   });
 });
 
-
 app.post("/", async (req, res) => {
   const username = req.body.username_input;
   const password = req.body.password_input;
 
   try {
     const result = await pool.query(
-      "SELECT * FROM users WHERE username = $1",  // Only get user by username
+      "SELECT * FROM users WHERE username = $1", // Only get user by username
       [username],
     );
     const user = result.rows[0];
-    
+
     if (!user) {
       return res.json({ success: false });
     }
-    
+
     //Compare hashed password
     const validPassword = await bcrypt.compare(password, user.password);
-    
+
     if (!validPassword) {
       return res.json({ success: false });
     }
@@ -142,50 +154,45 @@ app.post("/", async (req, res) => {
       `SELECT r.name FROM roles r 
       JOIN user_roles ur ON ur.role_id = r.id 
       WHERE ur.user_id = $1`,
-      [user.id]
+      [user.id],
     );
-    const role = roleResult.rows[0]?.name || 'student';
+    const role = roleResult.rows[0]?.name || "student";
     user.role = role; // attach to user before storing in session/JWT
 
-
-
-    //If 2FA not yet set up (false) - send to setup page 
-    if (!user.twofa_enabled && !user.twofa_secret){
+    //If 2FA not yet set up (false) - send to setup page
+    if (!user.twofa_enabled && !user.twofa_secret) {
       req.session.tempUser = user;
-      return res.json({setup2fa: true})
+      return res.json({ setup2fa: true });
     }
     // if (user.twofa_enabled ) {
     //   req.session.tempUser = user;
     //   console.log("TEMP USER SET:", req.session.tempUser);
     //   return res.json({ twofa: true });
     // }
-   // If 2FA enabled and secret exists. -send to verify page 
-   if(user.twofa_enabled && user.twofa_secret){
-    req.session.tempUser = user;
-    return res.json({twofa:true})
-   }
+    // If 2FA enabled and secret exists. -send to verify page
+    if (user.twofa_enabled && user.twofa_secret) {
+      req.session.tempUser = user;
+      return res.json({ twofa: true });
+    }
 
-
-    // 2FA not enabled, no secret code - normal login 
+    // 2FA not enabled, no secret code - normal login
     // req.session.user = user;
     const token = signToken(user);
     setTokenCookie(res, token);
     return res.json({ success: true });
-
   } catch (err) {
     console.error(err);
     res.status(500).send("Database error");
   }
 });
 
-
-//LOGOUT 
+//LOGOUT
 app.get("/logout", (req, res) => {
   // Clear the JWT cookie
   res.clearCookie("jwt", {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production"
+    secure: process.env.NODE_ENV === "production",
   });
 
   // Also destroy the express session (used during 2FA flow)
@@ -194,14 +201,11 @@ app.get("/logout", (req, res) => {
   });
 });
 
-
-
 // ─── DASHBOARD (protected home page) ─────────────────────────────────────────
 
 app.get("/dashboard", requireAuth, (req, res) => {
   res.sendFile(__dirname + "/public/html/index.html");
 });
-
 
 // returns session user:
 // app.get("/me", (req, res) => {
@@ -212,38 +216,42 @@ app.get("/dashboard", requireAuth, (req, res) => {
 //   res.json({ userId: req.session.tempUser.id });
 // });
 
-
 // ─── Who am I? ────────────────────────────────────────────────────────────────
 
 app.get("/me", (req, res) => {
   // res.json({ userId: req.user.id, username: req.user.username });
-   // Check JWT first (fully logged in)
-   const token = req.cookies.jwt;
-   if (token) {
-    jwt.verify(token, process.env.JWT_SECRET || "jwt_secret_key", (err, decoded) => {
-      if (!err) {
-        return res.json({ userId: decoded.id, username: decoded.username });
-      }
-      // Token invalid/expired — fall through to tempUser check
-      if (req.session.tempUser) {
-        return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username });
-      }
-      return res.status(401).json({ message: "Not logged in" });
-    });
+  // Check JWT first (fully logged in)
+  const token = req.cookies.jwt;
+  if (token) {
+    jwt.verify(
+      token,
+      process.env.JWT_SECRET || "jwt_secret_key",
+      (err, decoded) => {
+        if (!err) {
+          return res.json({ userId: decoded.id, username: decoded.username });
+        }
+        // Token invalid/expired — fall through to tempUser check
+        if (req.session.tempUser) {
+          return res.json({
+            userId: req.session.tempUser.id,
+            username: req.session.tempUser.username,
+          });
+        }
+        return res.status(401).json({ message: "Not logged in" });
+      },
+    );
     return; // ← critical: stop execution here while callback runs
   }
-   // Fall back to tempUser (mid 2FA setup flow)
-   if (req.session.tempUser) {
-     return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username });
-   }
- 
-   return res.status(401).json({ message: "Not logged in" });
+  // Fall back to tempUser (mid 2FA setup flow)
+  if (req.session.tempUser) {
+    return res.json({
+      userId: req.session.tempUser.id,
+      username: req.session.tempUser.username,
+    });
+  }
 
-
-
+  return res.status(401).json({ message: "Not logged in" });
 });
-
-
 
 // setup 2fa route (qr code generation)
 app.get("/setup-2fa/:userId", async (req, res) => {
@@ -251,14 +259,14 @@ app.get("/setup-2fa/:userId", async (req, res) => {
   // const secret = speakeasy.generateSecret({
   //   name: "TutorBlog",
   // });
-  // change code here - done 
+  // change code here - done
   const secret = generateSecret();
 
   await pool.query("UPDATE users SET twofa_secret=$1 WHERE id=$2", [
     secret,
     parseInt(req.params.userId),
   ]);
-   // Update session with the new secret so confirm route can read it
+  // Update session with the new secret so confirm route can read it
   if (req.session.tempUser) {
     // req.session.tempUser.twofa_secret = secret.base32;
     req.session.tempUser.twofa_secret = secret;
@@ -269,7 +277,6 @@ app.get("/setup-2fa/:userId", async (req, res) => {
   QRcode.toDataURL(otpAuthUrl, (err, url) => {
     res.json({ qrCode: url });
   });
-
 
   // QRcode.toDataURL(secret.otpauth_url, (err, url) => {
   //   res.json({qrCode: url});
@@ -286,25 +293,24 @@ app.post("/verify-2fa", async (req, res) => {
   //   token: token,
   // });
   const verified = verifyTOTP(user.twofa_secret, req.body.token);
-  console.log("VERIFIED RESULT:", verified)
+  console.log("VERIFIED RESULT:", verified);
 
   console.log("SESSION:", req.session);
   console.log("TEMP USER:", req.session.tempUser);
 
   if (verified) {
-     // Issue JWT, clear temp session
-     const token = signToken(user);
-     setTokenCookie(res, token);
+    // Issue JWT, clear temp session
+    const token = signToken(user);
+    setTokenCookie(res, token);
     // req.session.user = user;
     req.session.tempUser = null;
     // res.send("2FA success - logged in");
-    return res.json({success: true})
+    return res.json({ success: true });
   } else {
     return res.status(401).send("Invalid 2FA code");
   }
 });
 app.post("/confirm-2fa-setup", async (req, res) => {
-  
   const user = req.session.tempUser;
   if (!user) return res.status(401).json({ message: "Session expired" });
 
@@ -319,10 +325,9 @@ app.post("/confirm-2fa-setup", async (req, res) => {
   const verified = verifyTOTP(user.twofa_secret, req.body.token);
 
   if (verified) {
-    await pool.query(
-      "UPDATE users SET twofa_enabled = TRUE WHERE id = $1",
-      [parseInt(user.id)]
-    );
+    await pool.query("UPDATE users SET twofa_enabled = TRUE WHERE id = $1", [
+      parseInt(user.id),
+    ]);
     // req.session.user = { ...user, twofa_enabled: true };
     // req.session.tempUser = null;
     // return res.json({ success: true });
@@ -332,7 +337,9 @@ app.post("/confirm-2fa-setup", async (req, res) => {
     req.session.tempUser = null;
     return res.json({ success: true });
   } else {
-    return res.status(401).json({ message: "Code incorrect — try scanning again" });
+    return res
+      .status(401)
+      .json({ message: "Code incorrect — try scanning again" });
   }
 });
 
@@ -341,78 +348,98 @@ app.post("/confirm-2fa-setup", async (req, res) => {
 // const emailController = require('./email');
 
 // Add this route for registration page
-app.get('/register', (req, res) => {
-    res.sendFile(__dirname + '/public/html/register.html');
+app.get("/register", (req, res) => {
+  res.sendFile(__dirname + "/public/html/register.html");
 });
 
 // Registration with OTP
-app.post('/register', async (req, res) => {
-    const { email, username, password, first_name, last_name, role } = req.body;
+app.post("/register", async (req, res) => {
+  const { email, username, password, first_name, last_name, role } = req.body;
 
-
-    
-    try {
-        // Check if email exists
-        const existingEmail = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
-        if (existingEmail.rows.length > 0) {
-            // return res.send('<h2>Email already registered</h2><a href="/register">Try again</a>');
-             // Delete existing user before re-registering
-             await pool.query('DELETE FROM users WHERE email = $1', [email.toLowerCase()]);
-        }
-        
-        // Check if username exists
-        const existingUsername = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
-        if (existingUsername.rows.length > 0) {
-            return res.send('<h2>Username already taken</h2><a href="/register">Try again</a>');
-        }
-        
-        // Send OTP email
-        emailController.sendRegistrationOTP(req, res);
-        
-    } catch (error) {
-        console.error(error);
-        res.send('Registration error');
+  try {
+    // Check if email exists
+    const existingEmail = await pool.query(
+      "SELECT id FROM users WHERE email = $1",
+      [email],
+    );
+    if (existingEmail.rows.length > 0) {
+      // return res.send('<h2>Email already registered</h2><a href="/register">Try again</a>');
+      // Delete existing user before re-registering
+      await pool.query("DELETE FROM users WHERE email = $1", [
+        email.toLowerCase(),
+      ]);
     }
+
+    // Check if username exists
+    const existingUsername = await pool.query(
+      "SELECT id FROM users WHERE username = $1",
+      [username],
+    );
+    if (existingUsername.rows.length > 0) {
+      return res.send(
+        '<h2>Username already taken</h2><a href="/register">Try again</a>',
+      );
+    }
+
+    // Send OTP email
+    emailController.sendRegistrationOTP(req, res);
+  } catch (error) {
+    console.error(error);
+    res.send("Registration error");
+  }
 });
 
 // Verify OTP and complete registration
-app.post('/verify-registration', async (req, res) => {
-    const { email, username, password, first_name, last_name, otp, role } = req.body;
-    
-    if (emailController.verifyOTP(email, otp)) {
-        try {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            
-            // Get next user ID
-            const idResult = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM users');
-            const userId = idResult.rows[0].next_id;
-            
-            // Insert user
-            await pool.query(
-                `INSERT INTO users (id, username, first_name, last_name, email, password, created_at) 
+app.post("/verify-registration", async (req, res) => {
+  const { email, username, password, first_name, last_name, otp, role } =
+    req.body;
+
+  if (emailController.verifyOTP(email, otp)) {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Get next user ID
+      const idResult = await pool.query(
+        "SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM users",
+      );
+      const userId = idResult.rows[0].next_id;
+
+      // Insert user
+      await pool.query(
+        `INSERT INTO users (id, username, first_name, last_name, email, password, created_at) 
                  VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-                [userId, username, first_name, last_name, email.toLowerCase(), hashedPassword]
-            );
-            
-            // Assign role
-            const roleResult = await pool.query('SELECT id FROM roles WHERE LOWER(name) = LOWER($1)', [role || 'student']);
-            if (roleResult.rows.length > 0) {
-                await pool.query(
-                    'INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)',
-                    [userId, roleResult.rows[0].id]
-                );
-            }
-            
-            // If tutor, create tutor profile
-            if (role === 'tutor') {
-                await pool.query(
-                    'INSERT INTO tutor_profiles (user_id, subject, rating) VALUES ($1, $2, $3)',
-                    [userId, 'Not specified', 0.0]
-                );
-            }
-            
-            // Success page
-            res.send(`
+        [
+          userId,
+          username,
+          first_name,
+          last_name,
+          email.toLowerCase(),
+          hashedPassword,
+        ],
+      );
+
+      // Assign role
+      const roleResult = await pool.query(
+        "SELECT id FROM roles WHERE LOWER(name) = LOWER($1)",
+        [role || "student"],
+      );
+      if (roleResult.rows.length > 0) {
+        await pool.query(
+          "INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)",
+          [userId, roleResult.rows[0].id],
+        );
+      }
+
+      // If tutor, create tutor profile
+      if (role === "tutor") {
+        await pool.query(
+          "INSERT INTO tutor_profiles (user_id, subject, rating) VALUES ($1, $2, $3)",
+          [userId, "Not specified", 0.0],
+        );
+      }
+
+      // Success page
+      res.send(`
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -431,21 +458,21 @@ app.post('/verify-registration', async (req, res) => {
                 </body>
                 </html>
             `);
-        } catch (error) {
-            console.error(error);
-            res.send('Registration failed. Please try again.');
-        }
-    } else {
-        res.send(`
+    } catch (error) {
+      console.error(error);
+      res.send("Registration failed. Please try again.");
+    }
+  } else {
+    res.send(`
             <h2>Invalid or Expired Code</h2>
             <p>The verification code is incorrect or has expired.</p>
             <a href="/register">Try registering again</a>
         `);
-    }
+  }
 });
 
 // Resend OTP
-app.post('/resend-otp', emailController.resendRegistrationOTP);
+app.post("/resend-otp", emailController.resendRegistrationOTP);
 /*
 // Login POST request
 app.post('/',function(req, res){
@@ -592,7 +619,7 @@ app.post("/makepost", requireAuth, async (req, res) => {
 });
 
 // Delete a post POST request
-app.post("/deletepost",requireAuth, async (req, res) => {
+app.post("/deletepost", requireAuth, async (req, res) => {
   try {
     await pool.query(`DELETE FROM posts WHERE post_id = $1 AND user_id = $2`, [
       req.body.postId,
@@ -624,6 +651,36 @@ app.post("/deletepost",requireAuth, async (req, res) => {
  });
 
  */
+app.get("/tutors", async (req, res) => {
+  const search = req.query.q;
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+          u.id,
+          u.username,
+          tp.subject,
+          tp.rating,
+          ARRAY_AGG(DISTINCT ta.achievement) AS achievements,
+          ARRAY_AGG(DISTINCT tq.qualification) AS qualifications
+      FROM users u
+      JOIN tutor_profiles tp ON tp.user_id = u.id
+      LEFT JOIN tutor_achievements ta ON ta.tutor_id = tp.user_id
+      LEFT JOIN tutor_qualifications tq ON tq.tutor_id = tp.user_id
+      GROUP BY
+          u.id,
+          tp.subject,
+          tp.rating
+      `,
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
 app.get("/tutors/search", async (req, res) => {
   const search = req.query.q;
 

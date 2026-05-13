@@ -1,6 +1,8 @@
 let currentTutor = null;
 let currentUser = null;
 let bookings = [];
+let tutors = [];
+
 import { htmlEscape } from "./htmlEscape.js";
 // Load tutor data
 async function loadTutorProfile() {
@@ -20,104 +22,96 @@ async function loadTutorProfile() {
     bookings = [];
   }
 
-  // Demo tutor data
-  const tutors = {
-    1: {
-      id: 1,
-      name: "Dr. John Doe",
-      subject: "Mathematics",
-      rating: 4.8,
-      achievements: [
-        "Helped 50+ students achieve A* grades in GCSE Mathematics",
-        "Success rate of 95% in exam preparation",
-        "Featured as 'Top Tutor of the Year' 2023",
-        "Published mathematics research papers",
-      ],
-      qualifications: [
-        "PhD in Mathematics from Oxford University",
-        "PGCE in Secondary Education",
-        "10+ years of teaching experience",
-        "Exam board examiner for A-Level Mathematics",
-        "Mathematics Olympiad coach",
-      ],
-      availability: [
-        "2024-03-25 10:00",
-        "2024-03-25 14:00",
-        "2024-03-26 11:00",
-        "2024-03-26 15:00",
-        "2024-03-27 09:00",
-        "2024-03-27 13:00",
-        "2024-03-28 10:00",
-        "2024-03-28 16:00",
-      ],
-    },
-    2: {
-      id: 2,
-      name: "Prof. Jane Smith",
-      subject: "Physics",
-      rating: 4.9,
-      achievements: [
-        "Students improved by 30% average within 3 months",
-        "Published research in quantum physics",
-        "Physics Olympiad gold medalist coach",
-        "University lecturer at Imperial College",
-      ],
-      qualifications: [
-        "MSc in Physics from Cambridge University",
-        "PhD in Quantum Mechanics",
-        "5 years tutoring experience",
-        "Physics curriculum developer",
-        "Research fellow at CERN",
-      ],
-      availability: [
-        "2024-03-25 09:00",
-        "2024-03-25 13:00",
-        "2024-03-26 10:00",
-        "2024-03-26 14:00",
-        "2024-03-27 11:00",
-        "2024-03-28 09:00",
-      ],
-    },
-    3: {
-      id: 3,
-      name: "Mr. Alan Turing",
-      subject: "Computer Science",
-      rating: 4.7,
-      achievements: [
-        "Helped 30+ students get into top universities",
-        "Created coding bootcamp with 1000+ students",
-        "AI and Machine Learning specialist",
-        " National Coding Competition winner (mentor)",
-      ],
-      qualifications: [
-        "MSc in Computer Science",
-        "Full-stack developer at Google",
-        "5 years tutoring experience",
-        "Python certification instructor",
-        "Game development expert",
-      ],
-      availability: [
-        "2024-03-26 15:00",
-        "2024-03-27 10:00",
-        "2024-03-27 14:00",
-        "2024-03-28 11:00",
-        "2024-03-28 15:00",
-      ],
-    },
-  };
+  try {
+    // const tutorsResponse = await fetch("../json/tutors.json");
+    const tutorsResponse = await fetch("/tutors");
+    tutors = await tutorsResponse.json();
+  } catch (error) {
+    console.log("Using demo data...");
+    // Demo data
+    tutors = [
+      {
+        id: 1,
+        name: "Dr. John Doe",
+        subject: "Mathematics",
+        rating: 4.8,
+        achievements: [
+          "Helped 50+ students achieve A* grades",
+          "Mathematics Olympiad winner",
+          "95% student success rate",
+        ],
+        qualifications: [
+          "PhD in Mathematics - Oxford University",
+          "10 years teaching experience",
+          "Exam board examiner",
+        ],
+        availability: [
+          "2024-03-25 10:00",
+          "2024-03-25 14:00",
+          "2024-03-26 11:00",
+          "2024-03-26 15:00",
+          "2024-03-27 09:00",
+        ],
+      },
+      {
+        id: 2,
+        name: "Prof. Jane Smith",
+        subject: "Physics",
+        rating: 4.9,
+        achievements: [
+          "Students improved by 30% average",
+          "Published research in quantum physics",
+          "University lecturer",
+        ],
+        qualifications: [
+          "MSc in Physics - Cambridge",
+          "5 years tutoring experience",
+          "Physics Olympiad coach",
+        ],
+        availability: [
+          "2024-03-25 09:00",
+          "2024-03-25 13:00",
+          "2024-03-26 10:00",
+          "2024-03-26 14:00",
+        ],
+      },
+      {
+        id: 3,
+        name: "Mr. Alan Turing",
+        subject: "Computer Science",
+        rating: 4.7,
+        achievements: [
+          "Helped 30+ students get into top universities",
+          "Coding bootcamp instructor",
+        ],
+        qualifications: [
+          "MSc in Computer Science",
+          "Full-stack developer",
+          "5 years tutoring experience",
+        ],
+        availability: [
+          "2024-03-26 15:00",
+          "2024-03-27 10:00",
+          "2024-03-27 14:00",
+        ],
+      },
+    ];
+  }
 
-  currentTutor = tutors[tutorId] || tutors[1];
+  const selectedTutorId = Number(tutorId);
+  currentTutor = tutors.find((t) => t.id === selectedTutorId) || tutors[0];
   displayTutorProfile();
 }
 
 // Display tutor profile
 function displayTutorProfile() {
+  const tutorName = currentTutor.name || currentTutor.username || 'Tutor';
   const container = document.getElementById("tutorProfileContent");
   if (!container) return;
 
   container.innerHTML = `
         <section style="text-align: left;">
-            <h2 style="color: #f56d36;">${htmlEscape(currentTutor.name)}</h2>
+            <h2 style="color: #f56d36;">${htmlEscape(tutorName)}</h2>
             <div style="display: inline-block; background-color: #f56d36; color: white; padding: 5px 15px; border-radius: 5px; margin: 10px 0;">
                 ${htmlEscape(currentTutor.subject)}
             </div>
