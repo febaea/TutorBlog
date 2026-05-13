@@ -68,7 +68,7 @@ function signToken(user) {
   return jwt.sign(
     { id: user.id, username: user.username, email: user.email, role: user.role },
     process.env.JWT_SECRET || "jwt_secret_key",
-    { expiresIn: "1d" }
+    { expiresIn: "2h" } //change to 2 hours?
   );
 }
 
@@ -77,7 +77,7 @@ function setTokenCookie(res, token) {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
+    maxAge:  2 * 60 * 60 * 1000 
   });
 }
 
@@ -215,8 +215,32 @@ app.get("/dashboard", requireAuth, (req, res) => {
 
 // ─── Who am I? ────────────────────────────────────────────────────────────────
 
-app.get("/me", requireAuth, (req, res) => {
-  res.json({ userId: req.user.id, username: req.user.username });
+app.get("/me", (req, res) => {
+  // res.json({ userId: req.user.id, username: req.user.username });
+   // Check JWT first (fully logged in)
+   const token = req.cookies.jwt;
+   if (token) {
+    jwt.verify(token, process.env.JWT_SECRET || "jwt_secret_key", (err, decoded) => {
+      if (!err) {
+        return res.json({ userId: decoded.id, username: decoded.username });
+      }
+      // Token invalid/expired — fall through to tempUser check
+      if (req.session.tempUser) {
+        return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username });
+      }
+      return res.status(401).json({ message: "Not logged in" });
+    });
+    return; // ← critical: stop execution here while callback runs
+  }
+   // Fall back to tempUser (mid 2FA setup flow)
+   if (req.session.tempUser) {
+     return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username });
+   }
+ 
+   return res.status(401).json({ message: "Not logged in" });
+
+
+
 });
 
 
@@ -324,12 +348,16 @@ app.get('/register', (req, res) => {
 // Registration with OTP
 app.post('/register', async (req, res) => {
     const { email, username, password, first_name, last_name, role } = req.body;
+
+
     
     try {
         // Check if email exists
         const existingEmail = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
         if (existingEmail.rows.length > 0) {
-            return res.send('<h2>Email already registered</h2><a href="/register">Try again</a>');
+            // return res.send('<h2>Email already registered</h2><a href="/register">Try again</a>');
+             // Delete existing user before re-registering
+             await pool.query('DELETE FROM users WHERE email = $1', [email.toLowerCase()]);
         }
         
         // Check if username exists

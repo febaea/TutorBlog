@@ -6,8 +6,11 @@ async function startSetup() {
         document.getElementById('msg').innerText = "Session expired, please log in again."
         return;
     }
-    const {userId} = await meRes.json();
-    console.log("userId from /me:", userId); 
+    // const {userId} = await meRes.json();
+    // console.log("userId from /me:", userId); 
+    const meData = await meRes.json();
+    console.log("me data:", meData);
+    const userId = meData.userId;
 
    
    
@@ -35,7 +38,7 @@ async function startSetup() {
     if (result.success) {
       msg.style.color = "green";
       msg.innerText = "2FA set up! Redirecting...";
-      setTimeout(() => window.location.href = '../html/index.html', 1000);
+      setTimeout(() => window.location.href = '/dashboard', 1000);
     } else {
       msg.style.color = "red";
       msg.innerText = result.message;
