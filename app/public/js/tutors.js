@@ -2,36 +2,81 @@ let tutors = [];
 import { htmlEscape } from "./htmlEscape.js";
 async function loadTutors() {
   // Demo data
-  tutors = [
-    {
-      id: 1,
-      name: "Dr. John Doe",
-      subject: "Mathematics",
-      rating: 4.8,
-      achievements: [
-        "Helped 50+ students achieve A* grades",
-        "Mathematics Olympiad winner",
-      ],
-      qualifications: ["PhD in Mathematics", "10 years experience"],
-    },
-    {
-      id: 2,
-      name: "Prof. Jane Smith",
-      subject: "Physics",
-      rating: 4.9,
-      achievements: ["Students improved by 30% average", "Published research"],
-      qualifications: ["MSc in Physics", "5 years experience"],
-    },
-    {
-      id: 3,
-      name: "Mr. Alan Turing",
-      subject: "Computer Science",
-      rating: 4.7,
-      achievements: ["Helped 30+ students get into top universities"],
-      qualifications: ["MSc in Computer Science", "5 years experience"],
-    },
-  ];
-
+  try {
+    // const tutorsResponse = await fetch("../json/tutors.json");
+    const tutorsResponse = await fetch("/tutors");
+    tutors = await tutorsResponse.json();
+  } catch (error) {
+    console.log("Using demo data...");
+    // Demo data
+    tutors = [
+      {
+        id: 1,
+        name: "Dr. John Doe",
+        subject: "Mathematics",
+        rating: 4.8,
+        achievements: [
+          "Helped 50+ students achieve A* grades",
+          "Mathematics Olympiad winner",
+          "95% student success rate",
+        ],
+        qualifications: [
+          "PhD in Mathematics - Oxford University",
+          "10 years teaching experience",
+          "Exam board examiner",
+        ],
+        availability: [
+          "2024-03-25 10:00",
+          "2024-03-25 14:00",
+          "2024-03-26 11:00",
+          "2024-03-26 15:00",
+          "2024-03-27 09:00",
+        ],
+      },
+      {
+        id: 2,
+        name: "Prof. Jane Smith",
+        subject: "Physics",
+        rating: 4.9,
+        achievements: [
+          "Students improved by 30% average",
+          "Published research in quantum physics",
+          "University lecturer",
+        ],
+        qualifications: [
+          "MSc in Physics - Cambridge",
+          "5 years tutoring experience",
+          "Physics Olympiad coach",
+        ],
+        availability: [
+          "2024-03-25 09:00",
+          "2024-03-25 13:00",
+          "2024-03-26 10:00",
+          "2024-03-26 14:00",
+        ],
+      },
+      {
+        id: 3,
+        name: "Mr. Alan Turing",
+        subject: "Computer Science",
+        rating: 4.7,
+        achievements: [
+          "Helped 30+ students get into top universities",
+          "Coding bootcamp instructor",
+        ],
+        qualifications: [
+          "MSc in Computer Science",
+          "Full-stack developer",
+          "5 years tutoring experience",
+        ],
+        availability: [
+          "2024-03-26 15:00",
+          "2024-03-27 10:00",
+          "2024-03-27 14:00",
+        ],
+      },
+    ];
+  }
   displayAllTutors();
 }
 
@@ -49,7 +94,7 @@ function displayAllTutors() {
     card.onclick = () => viewTutorProfile(tutor.id);
 
     card.innerHTML = `
-            <h3 style="color: #f56d36;">${htmlEscape(tutor.name)}</h3>
+            <h3 style="color: #f56d36;">${htmlEscape(tutor.first_name + " " + tutor.last_name)}</h3>
             <div style="display: inline-block; background-color: #f56d36; color: white; padding: 5px 10px; border-radius: 5px; margin: 5px 0;">
                 ${htmlEscape(tutor.subject)}
             </div>
