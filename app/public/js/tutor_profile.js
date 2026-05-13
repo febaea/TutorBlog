@@ -98,8 +98,8 @@ async function loadTutorProfile() {
     ];
   }
 
-  const selectedTutorId = Number(tutorId);
-  currentTutor = tutors.find((t) => t.id === selectedTutorId) || tutors[0];
+  const selectedTutorId = localStorage.getItem("viewTutorId");
+  currentTutor = tutors.find((t) => String(t.id) === selectedTutorId) || tutors[0];
   displayTutorProfile();
 }
 
