@@ -301,15 +301,15 @@ async function updateUIForUser() {
         myBookingsNav.style.display = data.role === "Student" ? "block" : "none";
 
       // Tutors get a My Posts nav link
-      if (data.role === "tutor") {
-        const nav = document.querySelector("nav ul");
-        if (nav && !document.getElementById("myProfileNav")) {
-          const li = document.createElement("li");
-          li.id = "myProfileNav";
-          li.innerHTML = `<a href="../html/my_posts.html">My Posts</a>`;
-          nav.appendChild(li);
-        }
-      }
+      // if (data.role === "tutor") {
+      //   const nav = document.querySelector("nav ul");
+      //   if (nav && !document.getElementById("myProfileNav")) {
+      //     const li = document.createElement("li");
+      //     li.id = "myProfileNav";
+      //     li.innerHTML = `<a href="../html/my_posts.html">My Posts</a>`;
+      //     nav.appendChild(li);
+      //   }
+      // }
 
     } else {
       // Not logged in

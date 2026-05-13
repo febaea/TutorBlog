@@ -50,7 +50,7 @@ CREATE TABLE role_permissions (
 );
 
 CREATE TABLE posts (
-    id BIGINT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     author_id BIGINT NOT NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
