@@ -278,28 +278,13 @@ function viewTutorProfile(tutorId) {
 }
 
 // Update UI based on login status
+
 async function updateUIForUser() {
   const loginBtn = document.getElementById("login_btn");
   const logoutBtn = document.getElementById("logout_btn");
   const loginLink = document.getElementById("login_link");
   const myBookingsNav = document.getElementById("myBookingsNav");
 
-  // const userData = localStorage.getItem("currentUser");
-  // if (userData) {
-  //   currentUser = JSON.parse(userData);
-  //   if (loginBtn) loginBtn.style.display = "none";
-  //   if (logoutBtn) logoutBtn.style.display = "block";
-  //   if (loginLink)
-  //     loginLink.innerHTML = `${currentUser.username} <i class="fa fa-caret-down"></i>`;
-  //   if (myBookingsNav && currentUser.role === "student")
-  //     myBookingsNav.style.display = "block";
-  // } else {
-  //   if (loginBtn) loginBtn.style.display = "block";
-  //   if (logoutBtn) logoutBtn.style.display = "none";
-  //   if (loginLink)
-  //     loginLink.innerHTML = 'Account <i class="fa fa-caret-down"></i>';
-  //   if (myBookingsNav) myBookingsNav.style.display = "none";
-  // }
   try {
     const response = await fetch("/me");
     if (response.ok) {
@@ -310,7 +295,22 @@ async function updateUIForUser() {
       if (logoutBtn) logoutBtn.style.display = "block";
       if (loginLink)
         loginLink.innerHTML = `${data.username} <i class="fa fa-caret-down"></i>`;
-      if (myBookingsNav) myBookingsNav.style.display = "block";
+
+      // Students see My Bookings, tutors don't
+      if (myBookingsNav)
+        myBookingsNav.style.display = data.role === "Student" ? "block" : "none";
+
+      // Tutors get a My Posts nav link
+      if (data.role === "tutor") {
+        const nav = document.querySelector("nav ul");
+        if (nav && !document.getElementById("myProfileNav")) {
+          const li = document.createElement("li");
+          li.id = "myProfileNav";
+          li.innerHTML = `<a href="../html/my_posts.html">My Posts</a>`;
+          nav.appendChild(li);
+        }
+      }
+
     } else {
       // Not logged in
       if (loginBtn) loginBtn.style.display = "block";
@@ -328,11 +328,69 @@ async function updateUIForUser() {
     logoutBtn.onclick = (e) => {
       e.preventDefault();
       localStorage.removeItem("currentUser");
-      // window.location.reload();
       window.location.href = "/logout";
     };
   }
 }
+
+// async function updateUIForUser() {
+//   const loginBtn = document.getElementById("login_btn");
+//   const logoutBtn = document.getElementById("logout_btn");
+//   const loginLink = document.getElementById("login_link");
+//   const myBookingsNav = document.getElementById("myBookingsNav");
+
+  // const userData = localStorage.getItem("currentUser");
+  // if (userData) {
+  //   currentUser = JSON.parse(userData);
+  //   if (loginBtn) loginBtn.style.display = "none";
+  //   if (logoutBtn) logoutBtn.style.display = "block";
+  //   if (loginLink)
+  //     loginLink.innerHTML = `${currentUser.username} <i class="fa fa-caret-down"></i>`;
+  //   if (myBookingsNav && currentUser.role === "student")
+  //     myBookingsNav.style.display = "block";
+  // } else {
+  //   if (loginBtn) loginBtn.style.display = "block";
+  //   if (logoutBtn) logoutBtn.style.display = "none";
+  //   if (loginLink)
+  //     loginLink.innerHTML = 'Account <i class="fa fa-caret-down"></i>';
+  //   if (myBookingsNav) myBookingsNav.style.display = "none";
+  // }
+//   try {
+//     const response = await fetch("/me");
+//     if (response.ok) {
+//       const data = await response.json();
+//       currentUser = data;
+
+//       if (loginBtn) loginBtn.style.display = "none";
+//       if (logoutBtn) logoutBtn.style.display = "block";
+//       if (loginLink)
+//         loginLink.innerHTML = `${data.username} <i class="fa fa-caret-down"></i>`;
+
+
+
+//       if (myBookingsNav) myBookingsNav.style.display = "block";
+//     } else {
+//       // Not logged in
+//       if (loginBtn) loginBtn.style.display = "block";
+//       if (logoutBtn) logoutBtn.style.display = "none";
+//       if (loginLink)
+//         loginLink.innerHTML = 'Account <i class="fa fa-caret-down"></i>';
+//       if (myBookingsNav) myBookingsNav.style.display = "none";
+//     }
+//   } catch (err) {
+//     console.error("Auth check failed:", err);
+//   }
+
+//   // Setup logout
+//   if (logoutBtn) {
+//     logoutBtn.onclick = (e) => {
+//       e.preventDefault();
+//       localStorage.removeItem("currentUser");
+//       // window.location.reload();
+//       window.location.href = "/logout";
+//     };
+//   }
+// }
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", () => {

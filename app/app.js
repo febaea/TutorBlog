@@ -222,11 +222,11 @@ app.get("/me", (req, res) => {
    if (token) {
     jwt.verify(token, process.env.JWT_SECRET || "jwt_secret_key", (err, decoded) => {
       if (!err) {
-        return res.json({ userId: decoded.id, username: decoded.username });
+        return res.json({ userId: decoded.id, username: decoded.username, role: decoded.role });
       }
       // Token invalid/expired — fall through to tempUser check
       if (req.session.tempUser) {
-        return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username });
+        return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username, role: req.session.tempUser.role  });
       }
       return res.status(401).json({ message: "Not logged in" });
     });
@@ -234,7 +234,7 @@ app.get("/me", (req, res) => {
   }
    // Fall back to tempUser (mid 2FA setup flow)
    if (req.session.tempUser) {
-     return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username });
+     return res.json({ userId: req.session.tempUser.id, username: req.session.tempUser.username, role: req.session.tempUser.role });
    }
  
    return res.status(401).json({ message: "Not logged in" });
@@ -412,7 +412,7 @@ app.post('/verify-registration', async (req, res) => {
             }
             
             // If tutor, create tutor profile
-            if (role === 'tutor') {
+            if (role === 'Tutor') {
                 await pool.query(
                     'INSERT INTO tutor_profiles (user_id, subject, rating) VALUES ($1, $2, $3)',
                     [userId, 'Not specified', 0.0]
