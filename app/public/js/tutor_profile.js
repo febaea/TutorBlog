@@ -14,13 +14,13 @@ async function loadTutorProfile() {
     updateUIForUser();
   }
 
-  // Load bookings
-  const savedBookings = localStorage.getItem("bookings");
-  if (savedBookings) {
-    bookings = JSON.parse(savedBookings);
-  } else {
-    bookings = [];
-  }
+  // // Load bookings
+  // const savedBookings = localStorage.getItem("bookings");
+  // if (savedBookings) {
+  //   bookings = JSON.parse(savedBookings);
+  // } else {
+  //   bookings = [];
+  // }
 
   try {
     // const tutorsResponse = await fetch("../json/tutors.json");
@@ -127,118 +127,118 @@ function displayTutorProfile() {
                 ${currentTutor.qualifications.map((q) => `<li style="margin: 5px 0;">${htmlEscape(q)}</li>`).join("")}
             </ul>
             
-            <h3 style="margin-top: 25px; color: #f56d36;">Bookable Timetable</h3>
+          
             <div id="timetable" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;"></div>
         </section>
     `;
 
-  displayTimetable();
+  // displayTimetable();
 }
 
-// Display bookable timetable
-function displayTimetable() {
-  const timetableContainer = document.getElementById("timetable");
-  if (!timetableContainer) return;
+// // Display bookable timetable
+// function displayTimetable() {
+//   const timetableContainer = document.getElementById("timetable");
+//   if (!timetableContainer) return;
 
-  timetableContainer.innerHTML = "";
+//   timetableContainer.innerHTML = "";
 
-  currentTutor.availability.forEach((slot) => {
-    const isBooked = bookings.some(
-      (b) => b.tutorId == currentTutor.id && b.timeSlot === slot,
-    );
+//   currentTutor.availability.forEach((slot) => {
+//     const isBooked = bookings.some(
+//       (b) => b.tutorId == currentTutor.id && b.timeSlot === slot,
+//     );
 
-    const slotElement = document.createElement("div");
-    slotElement.className = "post";
-    slotElement.style.padding = "15px";
-    slotElement.style.margin = "5px";
-    slotElement.style.cursor = isBooked ? "not-allowed" : "pointer";
-    slotElement.style.backgroundColor = isBooked ? "#f0f0f0" : "white";
+//     const slotElement = document.createElement("div");
+//     slotElement.className = "post";
+//     slotElement.style.padding = "15px";
+//     slotElement.style.margin = "5px";
+//     slotElement.style.cursor = isBooked ? "not-allowed" : "pointer";
+//     slotElement.style.backgroundColor = isBooked ? "#f0f0f0" : "white";
 
-    const date = new Date(slot);
-    const formattedDate = date.toLocaleString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+//     const date = new Date(slot);
+//     const formattedDate = date.toLocaleString("en-US", {
+//       weekday: "short",
+//       month: "short",
+//       day: "numeric",
+//       hour: "2-digit",
+//       minute: "2-digit",
+//     });
 
-    slotElement.innerHTML = `
-            <div style="font-weight: bold;">${formattedDate}</div>
-            <div style="font-size: 12px; margin-top: 5px;">${isBooked ? "Booked" : " Available"}</div>
-        `;
+//     slotElement.innerHTML = `
+//             <div style="font-weight: bold;">${formattedDate}</div>
+//             <div style="font-size: 12px; margin-top: 5px;">${isBooked ? "Booked" : " Available"}</div>
+//         `;
 
-    if (!isBooked && currentUser && currentUser.role === "student") {
-      slotElement.onclick = () => openBookingModal(slot);
-    } else if (!currentUser) {
-      slotElement.onclick = () => alert("Please login to book a session!");
-    } else if (isBooked) {
-      slotElement.style.opacity = "0.6";
-    }
+//     if (!isBooked && currentUser && currentUser.role === "student") {
+//       slotElement.onclick = () => openBookingModal(slot);
+//     } else if (!currentUser) {
+//       slotElement.onclick = () => alert("Please login to book a session!");
+//     } else if (isBooked) {
+//       slotElement.style.opacity = "0.6";
+//     }
 
-    timetableContainer.appendChild(slotElement);
-  });
-}
+//     timetableContainer.appendChild(slotElement);
+//   });
+// }
 
-// Open booking modal
-function openBookingModal(timeSlot) {
-  if (!currentUser) {
-    alert("Please login to book a session!");
-    window.location.href = "../html/login.html";
-    return;
-  }
+// // Open booking modal
+// function openBookingModal(timeSlot) {
+//   if (!currentUser) {
+//     alert("Please login to book a session!");
+//     window.location.href = "../html/login.html";
+//     return;
+//   }
 
-  const modal = document.getElementById("bookingModal");
-  const bookingDetails = document.getElementById("bookingDetails");
-  const confirmBtn = document.getElementById("confirmBookingBtn");
+//   const modal = document.getElementById("bookingModal");
+//   const bookingDetails = document.getElementById("bookingDetails");
+//   const confirmBtn = document.getElementById("confirmBookingBtn");
 
-  const date = new Date(timeSlot);
-  const formattedDate = date.toLocaleString();
+//   const date = new Date(timeSlot);
+//   const formattedDate = date.toLocaleString();
 
-  bookingDetails.innerHTML = `
-        <strong>Tutor:</strong> ${htmlEscape(currentTutor.name)}<br>
-        <strong>Subject:</strong> ${htmlEscape(currentTutor.subject)}<br>
-        <strong>Date & Time:</strong> ${htmlEscape(formattedDate)}<br>
-        <strong>Duration:</strong> 1 hour<br>
-        <strong>Price:</strong> Free (Demo Session)
-    `;
+//   bookingDetails.innerHTML = `
+//         <strong>Tutor:</strong> ${htmlEscape(currentTutor.name)}<br>
+//         <strong>Subject:</strong> ${htmlEscape(currentTutor.subject)}<br>
+//         <strong>Date & Time:</strong> ${htmlEscape(formattedDate)}<br>
+//         <strong>Duration:</strong> 1 hour<br>
+//         <strong>Price:</strong> Free (Demo Session)
+//     `;
 
-  modal.style.display = "block";
+//   modal.style.display = "block";
 
-  confirmBtn.onclick = () => {
-    const booking = {
-      id: Date.now(),
-      tutorId: currentTutor.id,
-      tutorName: currentTutor.name,
-      subject: currentTutor.subject,
-      studentName: currentUser.username,
-      timeSlot: timeSlot,
-      bookingDate: new Date().toISOString(),
-      status: "confirmed",
-    };
+//   confirmBtn.onclick = () => {
+//     const booking = {
+//       id: Date.now(),
+//       tutorId: currentTutor.id,
+//       tutorName: currentTutor.name,
+//       subject: currentTutor.subject,
+//       studentName: currentUser.username,
+//       timeSlot: timeSlot,
+//       bookingDate: new Date().toISOString(),
+//       status: "confirmed",
+//     };
 
-    bookings.push(booking);
-    localStorage.setItem("bookings", JSON.stringify(bookings));
+//     bookings.push(booking);
+//     localStorage.setItem("bookings", JSON.stringify(bookings));
 
-    alert(' Booking confirmed! Check "My Bookings" page.');
-    modal.style.display = "none";
-    displayTimetable(); // Refresh timetable
-  };
+//     alert(' Booking confirmed! Check "My Bookings" page.');
+//     modal.style.display = "none";
+//     displayTimetable(); // Refresh timetable
+//   };
 
-  // Close modal
-  const closeBtn = document.querySelector(".close");
-  if (closeBtn) {
-    closeBtn.onclick = () => {
-      modal.style.display = "none";
-    };
-  }
+//   // Close modal
+//   const closeBtn = document.querySelector(".close");
+//   if (closeBtn) {
+//     closeBtn.onclick = () => {
+//       modal.style.display = "none";
+//     };
+//   }
 
-  window.onclick = (event) => {
-    if (event.target === modal) {
-      modal.style.display = "none";
-    }
-  };
-}
+//   window.onclick = (event) => {
+//     if (event.target === modal) {
+//       modal.style.display = "none";
+//     }
+//   };
+// }
 
 // Update UI based on login status
 function updateUIForUser() {
