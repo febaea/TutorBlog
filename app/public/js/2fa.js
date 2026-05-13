@@ -18,18 +18,20 @@ async function verify2FA() {
             body: JSON.stringify({ token })
         });
 
-        const text = await response.text();
+    
+        const data = await response.json()
+        console.log("RESPONSE DATA:", data); 
 
-        if (response.ok) {
+        if (data.success) {
             msg.style.color = "green";
             msg.innerText = "Success! Redirecting...";
 
             setTimeout(() => {
-                window.location.href = '/html/index.html';
+                window.location.href = '/dashboard';
             }, 1000);
         } else {
             msg.style.color = "red";
-            msg.innerText = text;
+            msg.innerText = data.message || "Invalid code, try again.";
         }
 
     } catch (err) {

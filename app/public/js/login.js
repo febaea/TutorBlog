@@ -21,7 +21,7 @@ loginForm.onsubmit = async (e) => {
     console.log(result)
 
     if (result.success) {
-        window.location.href = '../html/index.html';
+        window.location.href = '/dashboard';
     } else if (result.twofa){
         window.location.href = '../html/2fa.html';
     }else if (result.setup2fa) {

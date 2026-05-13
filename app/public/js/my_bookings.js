@@ -1,15 +1,29 @@
 let currentUser = null;
 let bookings = [];
 import { htmlEscape } from "./htmlEscape.js";
-function loadBookings() {
-  const userData = localStorage.getItem("currentUser");
-  if (!userData) {
-    alert("Please login to view your bookings!");
-    window.location.href = "../html/login.html";
+async function loadBookings() {
+  try {
+    const response = await fetch("/me");
+    if (!response.ok) {
+        alert("Please login to view your bookings!");
+        window.location.href = "/";
+        return;
+    }
+    currentUser = await response.json();
+  } catch (err) {
+    window.location.href = "/";
     return;
   }
 
-  currentUser = JSON.parse(userData);
+  // const userData = localStorage.getItem("currentUser");
+  // if (!userData) {
+  //   alert("Please login to view your bookings!");
+  //   window.location.href = "../html/login.html";
+  //   return;
+  // }
+
+
+  // currentUser = JSON.parse(userData);
 
   const savedBookings = localStorage.getItem("bookings");
   if (savedBookings) {

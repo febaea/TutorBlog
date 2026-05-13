@@ -3,6 +3,8 @@ require("dotenv").config();
 
 const express = require("express");
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');        
+const cookieParser = require('cookie-parser');
 const emailController = require('./email');
 const pool = require("./db");
 const postsRouter = require("./posts");
@@ -20,19 +22,9 @@ const port = 3000;
 // const speakeasy = require("speakeasy");
 const QRcode = require("qrcode");
 const session = require("express-session");
+var bodyParser = require("body-parser");
+const fs = require("fs");
 
-app.use(
-  session({
-    secret: "secretKey",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: false
-    }
-  }),
-);
 
 app.get("/db-test", async (req, res) => {
   try {
@@ -52,12 +44,66 @@ app.get("/db-test", async (req, res) => {
 
 // check
 
-var bodyParser = require("body-parser");
-const fs = require("fs");
-
+//Middleware 
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cookieParser());
+
+app.use(
+  session({
+    secret: "secretKey",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false
+    }
+  }),
+);
+
+// JWT helpers
+function signToken(user) {
+  return jwt.sign(
+    { id: user.id, username: user.username, email: user.email, role: user.role },
+    process.env.JWT_SECRET || "jwt_secret_key",
+    { expiresIn: "1d" }
+  );
+}
+
+function setTokenCookie(res, token) {
+  res.cookie("jwt", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 24 * 60 * 60 * 1000 // 1 day
+  });
+}
+
+function requireAuth(req, res, next) {
+  const token = req.cookies.jwt;
+  if (!token) return res.redirect("/");
+
+  jwt.verify(token, process.env.JWT_SECRET || "jwt_secret_key", (err, decoded) => {
+    if (err) return res.redirect("/");
+    req.user = decoded; // { id, username, email }
+    next();
+  });
+}
+
+
+
+
+// Reset login_attempt.json when server restarts
+let login_attempt = { username: "null", password: "null" };
+fs.writeFileSync(__dirname + "/public/json/login_attempt.json", JSON.stringify(login_attempt));
+
+// let data = JSON.stringify(login_attempt);
+// fs.writeFileSync(__dirname + "/public/json/login_attempt.json", data);
+
+// Store who is currently logged in
+//let currentUser = null;
 
 // Landing page
 app.get("/", (req, res) => {
@@ -69,13 +115,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// Reset login_attempt.json when server restarts
-let login_attempt = { username: "null", password: "null" };
-let data = JSON.stringify(login_attempt);
-fs.writeFileSync(__dirname + "/public/json/login_attempt.json", data);
-
-// Store who is currently logged in
-//let currentUser = null;
 
 app.post("/", async (req, res) => {
   const username = req.body.username_input;
@@ -99,6 +138,17 @@ app.post("/", async (req, res) => {
       return res.json({ success: false });
     }
 
+    const roleResult = await pool.query(
+      `SELECT r.name FROM roles r 
+      JOIN user_roles ur ON ur.role_id = r.id 
+      WHERE ur.user_id = $1`,
+      [user.id]
+    );
+    const role = roleResult.rows[0]?.name || 'student';
+    user.role = role; // attach to user before storing in session/JWT
+
+
+
     //If 2FA not yet set up (false) - send to setup page 
     if (!user.twofa_enabled && !user.twofa_secret){
       req.session.tempUser = user;
@@ -109,7 +159,7 @@ app.post("/", async (req, res) => {
     //   console.log("TEMP USER SET:", req.session.tempUser);
     //   return res.json({ twofa: true });
     // }
-   // If 2FA enabled and secret exists. -send to verigy page 
+   // If 2FA enabled and secret exists. -send to verify page 
    if(user.twofa_enabled && user.twofa_secret){
     req.session.tempUser = user;
     return res.json({twofa:true})
@@ -117,7 +167,9 @@ app.post("/", async (req, res) => {
 
 
     // 2FA not enabled, no secret code - normal login 
-    req.session.user = user;
+    // req.session.user = user;
+    const token = signToken(user);
+    setTokenCookie(res, token);
     return res.json({ success: true });
 
   } catch (err) {
@@ -126,14 +178,48 @@ app.post("/", async (req, res) => {
   }
 });
 
-// returns session user:
-app.get("/me", (req, res) => {
-  console.log("Session at /me:", req.session);
-  if (!req.session.tempUser) {
-    return res.status(401).json({ message: "Not logged in" });
-  }
-  res.json({ userId: req.session.tempUser.id });
+
+//LOGOUT 
+app.get("/logout", (req, res) => {
+  // Clear the JWT cookie
+  res.clearCookie("jwt", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production"
+  });
+
+  // Also destroy the express session (used during 2FA flow)
+  req.session.destroy(() => {
+    res.redirect("/");
+  });
 });
+
+
+
+// ─── DASHBOARD (protected home page) ─────────────────────────────────────────
+
+app.get("/dashboard", requireAuth, (req, res) => {
+  res.sendFile(__dirname + "/public/html/index.html");
+});
+
+
+// returns session user:
+// app.get("/me", (req, res) => {
+//   console.log("Session at /me:", req.session);
+//   if (!req.session.tempUser) {
+//     return res.status(401).json({ message: "Not logged in" });
+//   }
+//   res.json({ userId: req.session.tempUser.id });
+// });
+
+
+// ─── Who am I? ────────────────────────────────────────────────────────────────
+
+app.get("/me", requireAuth, (req, res) => {
+  res.json({ userId: req.user.id, username: req.user.username });
+});
+
+
 
 // setup 2fa route (qr code generation)
 app.get("/setup-2fa/:userId", async (req, res) => {
@@ -167,8 +253,8 @@ app.get("/setup-2fa/:userId", async (req, res) => {
 });
 
 app.post("/verify-2fa", async (req, res) => {
+  console.log("TOKEN RECEIVED:", req.body.token);
   const user = req.session.tempUser;
-  const token = req.body.token;
 
   // const verified = speakeasy.totp.verify({
   //   secret: user.twofa_secret,
@@ -176,21 +262,25 @@ app.post("/verify-2fa", async (req, res) => {
   //   token: token,
   // });
   const verified = verifyTOTP(user.twofa_secret, req.body.token);
+  console.log("VERIFIED RESULT:", verified)
 
   console.log("SESSION:", req.session);
   console.log("TEMP USER:", req.session.tempUser);
 
   if (verified) {
-    req.session.user = user;
+     // Issue JWT, clear temp session
+     const token = signToken(user);
+     setTokenCookie(res, token);
+    // req.session.user = user;
     req.session.tempUser = null;
     // res.send("2FA success - logged in");
-    res.json({success: true})
+    return res.json({success: true})
   } else {
-    res.status(401).send("Invalid 2FA code");
+    return res.status(401).send("Invalid 2FA code");
   }
 });
 app.post("/confirm-2fa-setup", async (req, res) => {
-  console.log("Session at /confirm:", req.session);
+  
   const user = req.session.tempUser;
   if (!user) return res.status(401).json({ message: "Session expired" });
 
@@ -209,7 +299,12 @@ app.post("/confirm-2fa-setup", async (req, res) => {
       "UPDATE users SET twofa_enabled = TRUE WHERE id = $1",
       [parseInt(user.id)]
     );
-    req.session.user = { ...user, twofa_enabled: true };
+    // req.session.user = { ...user, twofa_enabled: true };
+    // req.session.tempUser = null;
+    // return res.json({ success: true });
+    // Issue JWT, clear temp session
+    const token = signToken({ ...user, twofa_enabled: true });
+    setTokenCookie(res, token);
     req.session.tempUser = null;
     return res.json({ success: true });
   } else {
@@ -427,7 +522,7 @@ app.post('/makepost', function(req, res) {
     res.sendFile(__dirname + "/public/html/my_posts.html");
  });
  */
-app.post("/makepost", async (req, res) => {
+app.post("/makepost", requireAuth, async (req, res) => {
   let curDate = new Date();
 
   if (!req.session.user) {
@@ -469,7 +564,7 @@ app.post("/makepost", async (req, res) => {
 });
 
 // Delete a post POST request
-app.post("/deletepost", async (req, res) => {
+app.post("/deletepost",requireAuth, async (req, res) => {
   try {
     await pool.query(`DELETE FROM posts WHERE post_id = $1 AND user_id = $2`, [
       req.body.postId,
