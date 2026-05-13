@@ -662,6 +662,7 @@ app.get("/tutors", async (req, res) => {
           u.username,
           u.first_name,
           u.last_name,
+          u.email,
           tp.subject,
           tp.rating,
           ARRAY_AGG(DISTINCT ta.achievement) AS achievements,

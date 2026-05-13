@@ -127,7 +127,8 @@ function displayTutorProfile() {
                 ${currentTutor.qualifications.map((q) => `<li style="margin: 5px 0;">${htmlEscape(q)}</li>`).join("")}
             </ul>
             
-          
+            <h3 style="margin-top: 25px; color: #f56d36;"> Contact Information</h3>
+            <p style="margin: 10px 0;">Email: <a href="mailto:${htmlEscape(currentTutor.email)}">${htmlEscape(currentTutor.email)}</a></p>
             <div id="timetable" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 20px 0;"></div>
         </section>
     `;
