@@ -1,5 +1,6 @@
 import { htmlEscape } from "../js/htmlEscape.js";
 import assert from "assert";
+//to run put in terminal: npx mocha app/public/test/htmlEscape.test.js 
 
 //Tests for htmlEscape function
 // Starts by setting the variables then runs them by the function and checks that the output is correct
