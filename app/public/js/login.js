@@ -27,7 +27,7 @@ loginForm.onsubmit = async (e) => {
     }else if (result.setup2fa) {
         window.location.href = '../html/setup2fa.html';
     } else{
-        alert("Invalid login")
+        alert("The username and/or password are incorrect. Please try again.")
     }
 
 
