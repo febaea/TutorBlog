@@ -37,7 +37,8 @@ VALUES
 (4,'jane_deer','Jane','Deer','jane@example.com','temp123'),
 (5,'alan_turing','Alan','Turing','alan@example.com','temp123'),
 (6,'emma_watson','Emma','Watson','emma@example.com','temp123'),
-(7,'michael_brown','Michael','Brown','michael@example.com','temp123');
+(7,'michael_brown','Michael','Brown','michael@example.com','temp123'),
+(8,'sarah_lee','Sarah','Lee','sarah@example.com','temp123');
 
 INSERT INTO tutor_profiles (user_id, subject, rating)
 VALUES 
@@ -45,7 +46,8 @@ VALUES
 (4, 'Physics', 4.5),
 (5, 'Computer Science', 4.7),
 (6, 'Literature', 4.3),
-(7, 'Chemistry', 4.6);
+(7, 'Chemistry', 4.6),
+(8, 'Biology', 4.4);
 
 INSERT INTO tutor_achievements (tutor_id, achievement)
 VALUES
@@ -59,7 +61,10 @@ VALUES
 (6, 'Mentored 20+ aspiring writers'),
 (7, 'Chemistry Olympiad winner'),
 (7, 'Published research in organic chemistry'),
-(7, 'Helped 40+ students improve their grades');
+(7, 'Helped 40+ students improve their grades'),
+(8, 'Published research in genetics'),
+(8, 'Helped 25+ students excel in biology'),
+(8, 'Biology Olympiad winner');
 
 INSERT INTO tutor_qualifications (tutor_id, qualification)
 VALUES
@@ -76,4 +81,7 @@ VALUES
 (6, '5 years teaching experience'),
 (7, 'PhD in Chemistry'),
 (7, '10 years of tutoring experience'),
-(7, 'Published research in organic chemistry');
+(7, 'Published research in organic chemistry'),
+(8, 'PhD in Biology'),
+(8, '5 years of tutoring experience'),
+(8, 'Published research in genetics');

@@ -10,8 +10,8 @@ async function loadData() {
     const tutorsResponse = await fetch("/tutors");
     tutors = await tutorsResponse.json();
 
-    const storiesResponse = await fetch("../json/success_stories.json");
-    successStories = await storiesResponse.json();
+    //const storiesResponse = await fetch("../json/success_stories.json");
+    //successStories = await storiesResponse.json();
 
     const userData = localStorage.getItem("currentUser");
     if (userData) {
@@ -194,29 +194,29 @@ function createTutorCard(tutor) {
 }
 
 // Display success stories
-function displaySuccessStories() {
-  const storiesList = document.getElementById("storiesList");
-  if (!storiesList) return;
+// function displaySuccessStories() {
+//   const storiesList = document.getElementById("storiesList");
+//   if (!storiesList) return;
 
-  storiesList.innerHTML = "";
-  successStories
-    .slice(-3)
-    .reverse()
-    .forEach((story) => {
-      const storyCard = document.createElement("div");
-      storyCard.className = "post";
-      storyCard.style.padding = "20px";
-      storyCard.style.margin = "15px";
-      storyCard.style.textAlign = "left";
-      storyCard.innerHTML = `
-            <h4 style="color: #f56d36; margin-bottom: 10px;">${htmlEscape(story.title)}</h4>
-            <p>${htmlEscape(story.content)}</p>
-            <div style="margin-top: 10px; font-weight: bold;">- ${htmlEscape(story.tutor)} with ${htmlEscape(story.student)}</div>
-            <small style="color: #666;">${htmlEscape(story.date)}</small>
-        `;
-      storiesList.appendChild(storyCard);
-    });
-}
+//   storiesList.innerHTML = "";
+//   successStories
+//     .slice(-3)
+//     .reverse()
+//     .forEach((story) => {
+//       const storyCard = document.createElement("div");
+//       storyCard.className = "post";
+//       storyCard.style.padding = "20px";
+//       storyCard.style.margin = "15px";
+//       storyCard.style.textAlign = "left";
+//       storyCard.innerHTML = `
+//             <h4 style="color: #f56d36; margin-bottom: 10px;">${htmlEscape(story.title)}</h4>
+//             <p>${htmlEscape(story.content)}</p>
+//             <div style="margin-top: 10px; font-weight: bold;">- ${htmlEscape(story.tutor)} with ${htmlEscape(story.student)}</div>
+//             <small style="color: #666;">${htmlEscape(story.date)}</small>
+//         `;
+//       storiesList.appendChild(storyCard);
+//     });
+// }
 
 // Search functionality
 function setupSearch() {
