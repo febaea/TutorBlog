@@ -7,7 +7,7 @@ import { htmlEscape } from "./htmlEscape.js";
 async function loadData() {
   try {
     // const tutorsResponse = await fetch("../json/tutors.json");
-    const tutorsResponse = await fetch("/tutors/search?q=");
+    const tutorsResponse = await fetch("/tutors");
     tutors = await tutorsResponse.json();
 
     const storiesResponse = await fetch("../json/success_stories.json");
@@ -130,10 +130,38 @@ function displayFeaturedTutors() {
   if (!featuredList) return;
 
   featuredList.innerHTML = "";
-  tutors.slice(0, 3).forEach((tutor) => {
-    const tutorCard = createTutorCard(tutor);
-    featuredList.appendChild(tutorCard);
-  });
+  fetch(`/tutors/featured`)
+    .then((response) => response.json())
+    .then((results) => {
+      if (results.length > 0) {
+        featuredList.innerHTML =
+          '<h3 style="margin: 20px 0 10px 0;">Featured Tutors:</h3>';
+        results.forEach((tutor) => {
+          const tutorCard = {
+            id: tutor.id,
+            name: tutor.first_name + " " + tutor.last_name,
+            subject: tutor.subject,
+            rating: tutor.rating,
+            achievements: tutor.achievements || [],
+            qualifications: tutor.qualifications || [],
+          };
+          featuredList.appendChild(createTutorCard(tutorCard));
+        });
+      } else {
+        featuredList.innerHTML =
+          '<p class="post" style="padding: 20px;">No featured tutors found.</p>';
+      }
+    })
+    .catch((error) => {
+      console.error("Search error:", error);
+      searchResults.innerHTML =
+        '<p class="post" style="padding: 20px;">Error loading featured tutors. Please try again.</p>';
+    });
+
+  // tutors.slice(0, 3).forEach((tutor) => {
+  //   const tutorCard = createTutorCard(tutor);
+  //   featuredList.appendChild(tutorCard);
+  // });
 }
 
 // Create tutor card
@@ -217,7 +245,7 @@ function setupSearch() {
           results.forEach((tutor) => {
             const tutorCard = {
               id: tutor.id,
-              name: tutor.username,
+              name: tutor.first_name + " " + tutor.last_name,
               subject: tutor.subject,
               rating: tutor.rating,
               achievements: tutor.achievements || [],

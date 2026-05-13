@@ -105,7 +105,7 @@ async function loadTutorProfile() {
 
 // Display tutor profile
 function displayTutorProfile() {
-  const tutorName = currentTutor.name || currentTutor.username || 'Tutor';
+  const tutorName = currentTutor.name || currentTutor.first_name + " " + currentTutor.last_name || 'Tutor';
   const container = document.getElementById("tutorProfileContent");
   if (!container) return;
 

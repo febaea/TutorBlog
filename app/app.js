@@ -660,6 +660,8 @@ app.get("/tutors", async (req, res) => {
       SELECT
           u.id,
           u.username,
+          u.first_name,
+          u.last_name,
           tp.subject,
           tp.rating,
           ARRAY_AGG(DISTINCT ta.achievement) AS achievements,
@@ -681,6 +683,37 @@ app.get("/tutors", async (req, res) => {
     res.status(500).json({ error: "Database error" });
   }
 });
+app.get("/tutors/featured", async (req, res) => {
+  try {
+    const result = await pool.query(
+      ` 
+        SELECT
+          u.id,
+          u.first_name,
+          u.last_name,
+          tp.subject,
+          tp.rating,
+          ARRAY_AGG(DISTINCT ta.achievement) AS achievements,
+          ARRAY_AGG(DISTINCT tq.qualification) AS qualifications
+      FROM users u
+      JOIN tutor_profiles tp ON tp.user_id = u.id
+      LEFT JOIN tutor_achievements ta ON ta.tutor_id = tp.user_id
+      LEFT JOIN tutor_qualifications tq ON tq.tutor_id = tp.user_id
+      GROUP BY
+          u.id,
+          tp.subject,
+          tp.rating
+      ORDER BY tp.rating DESC
+      LIMIT 3
+      `,
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
 app.get("/tutors/search", async (req, res) => {
   const search = req.query.q;
 
@@ -690,6 +723,8 @@ app.get("/tutors/search", async (req, res) => {
       SELECT
           u.id,
           u.username,
+          u.first_name,
+          u.last_name,
           tp.subject,
           tp.rating,
           ARRAY_AGG(DISTINCT ta.achievement) AS achievements,
