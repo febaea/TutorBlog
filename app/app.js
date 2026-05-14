@@ -8,6 +8,9 @@ const cookieParser = require('cookie-parser');
 const emailController = require('./email');
 const pool = require("./db");
 const postsRouter = require("./posts");
+const bodyParser = require("body-parser");
+
+const path = require("path");
 const app = express();
 const {encrypt, decrypt } = require("../utils/encryption");
 const crypto = require('crypto');
@@ -24,7 +27,7 @@ const port = 3000;
 // const speakeasy = require("speakeasy");
 const QRcode = require("qrcode");
 const session = require("express-session");
-var bodyParser = require("body-parser");
+
 const fs = require("fs");
 
 
@@ -38,7 +41,8 @@ app.get("/db-test", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      success: false,
+      // success: false,
+      secure: process.env.NODE_ENV === "production",  // ← was false
       error: err.message,
     });
   }
@@ -72,6 +76,12 @@ app.use(
     }
   }),
 );
+
+app.use("/posts", postsRouter);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+
 
 // JWT helpers
 function signToken(user) {

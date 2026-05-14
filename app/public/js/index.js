@@ -284,6 +284,7 @@ async function updateUIForUser() {
   const logoutBtn = document.getElementById("logout_btn");
   const loginLink = document.getElementById("login_link");
   const myBookingsNav = document.getElementById("myBookingsNav");
+  const myPostsNav = document.getElementById("myPostsNav");
 
   try {
     const response = await fetch("/me");
@@ -299,6 +300,12 @@ async function updateUIForUser() {
       // Students see My Bookings, tutors don't
       if (myBookingsNav)
         myBookingsNav.style.display = data.role === "Student" ? "block" : "none";
+
+      // tutors see My posts, students don't
+      if (myPostsNav)
+        myPostsNav.style.display = data.role === "Tutor" ? "block" : "none";
+
+        
 
       // Tutors get a My Posts nav link
       // if (data.role === "tutor") {
