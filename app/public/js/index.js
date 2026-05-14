@@ -1,0 +1,309 @@
+
+let currentUser = null;
+let tutors = [];
+let successStories = [];
+import { htmlEscape } from "./htmlEscape.js";
+// Load data from JSON files or use demo data
+async function loadData() {
+  try {
+ 
+    const tutorsResponse = await fetch("/tutors");
+    tutors = await tutorsResponse.json();
+
+  
+
+    const userData = localStorage.getItem("currentUser");
+    if (userData) {
+      currentUser = JSON.parse(userData);
+    }
+  } catch (error) {
+    console.log("Using demo data...");
+    // Demo data
+    tutors = [
+      {
+        id: 1,
+        name: "Dr. John Doe",
+        subject: "Mathematics",
+        rating: 4.8,
+        achievements: [
+          "Helped 50+ students achieve A* grades",
+          "Mathematics Olympiad winner",
+          "95% student success rate",
+        ],
+        qualifications: [
+          "PhD in Mathematics - Oxford University",
+          "10 years teaching experience",
+          "Exam board examiner",
+        ],
+        availability: [
+          "2024-03-25 10:00",
+          "2024-03-25 14:00",
+          "2024-03-26 11:00",
+          "2024-03-26 15:00",
+          "2024-03-27 09:00",
+        ],
+      },
+      {
+        id: 2,
+        name: "Prof. Jane Smith",
+        subject: "Physics",
+        rating: 4.9,
+        achievements: [
+          "Students improved by 30% average",
+          "Published research in quantum physics",
+          "University lecturer",
+        ],
+        qualifications: [
+          "MSc in Physics - Cambridge",
+          "5 years tutoring experience",
+          "Physics Olympiad coach",
+        ],
+        availability: [
+          "2024-03-25 09:00",
+          "2024-03-25 13:00",
+          "2024-03-26 10:00",
+          "2024-03-26 14:00",
+        ],
+      },
+      {
+        id: 3,
+        name: "Mr. Alan Turing",
+        subject: "Computer Science",
+        rating: 4.7,
+        achievements: [
+          "Helped 30+ students get into top universities",
+          "Coding bootcamp instructor",
+        ],
+        qualifications: [
+          "MSc in Computer Science",
+          "Full-stack developer",
+          "5 years tutoring experience",
+        ],
+        availability: [
+          "2024-03-26 15:00",
+          "2024-03-27 10:00",
+          "2024-03-27 14:00",
+        ],
+      },
+    ];
+
+    successStories = [
+      {
+        id: 1,
+        title: "Student Achieves Perfect Score!",
+        content:
+          "Dr. John helped Sarah improve from C to A* in just 3 months! She's now studying Mathematics at Cambridge.",
+        tutor: "Dr. John Doe",
+        student: "Sarah Johnson",
+        date: "2024-03-15",
+      },
+      {
+        id: 2,
+        title: "University Admission Success",
+        content:
+          "Prof. Jane guided Michael to get accepted into Imperial College London for Physics!",
+        tutor: "Prof. Jane Smith",
+        student: "Michael Chen",
+        date: "2024-03-10",
+      },
+      {
+        id: 3,
+        title: "Coding Competition Winner",
+        content:
+          "Alan's student won first place in the National Coding Competition!",
+        tutor: "Mr. Alan Turing",
+        student: "Emma Watson",
+        date: "2024-03-05",
+      },
+    ];
+  }
+
+  displayFeaturedTutors();
+  displaySuccessStories();
+  updateUIForUser();
+}
+
+// Display featured tutors
+function displayFeaturedTutors() {
+  const featuredList = document.getElementById("featuredTutorsList");
+  if (!featuredList) return;
+
+  featuredList.innerHTML = "";
+  fetch(`/tutors/featured`)
+    .then((response) => response.json())
+    .then((results) => {
+      if (results.length > 0) {
+        featuredList.innerHTML =
+          '<h3 style="margin: 20px 0 10px 0;">Featured Tutors:</h3>';
+        results.forEach((tutor) => {
+          const tutorCard = {
+            id: tutor.id,
+            name: tutor.first_name + " " + tutor.last_name,
+            subject: tutor.subject,
+            rating: tutor.rating,
+            achievements: tutor.achievements || [],
+            qualifications: tutor.qualifications || [],
+          };
+          featuredList.appendChild(createTutorCard(tutorCard));
+        });
+      } else {
+        featuredList.innerHTML =
+          '<p class="post" style="padding: 20px;">No featured tutors found.</p>';
+      }
+    })
+    .catch((error) => {
+      console.error("Search error:", error);
+      searchResults.innerHTML =
+        '<p class="post" style="padding: 20px;">Error loading featured tutors. Please try again.</p>';
+    });
+
+  
+}
+
+// Create tutor card
+function createTutorCard(tutor) {
+  const card = document.createElement("div");
+  card.className = "post";
+  card.style.cursor = "pointer";
+  card.style.padding = "20px";
+  card.style.margin = "15px";
+  card.onclick = () => viewTutorProfile(tutor.id);
+
+  card.innerHTML = `
+        <h3 style="color: #f56d36; margin-bottom: 10px;">${htmlEscape(tutor.name)}</h3>
+        <div style="display: inline-block; background-color: #f56d36; color: white; padding: 5px 10px; border-radius: 5px; margin: 5px 0;">
+            ${htmlEscape(tutor.subject)}
+        </div>
+        <div style="margin: 10px 0;"> ${tutor.rating} / 5.0</div>
+        <p>${htmlEscape(tutor.achievements ? tutor.achievements[0] : "Experienced tutor")}</p>
+        <h3 style="margin-top: 25px; color: #f56d36;"> Achievements</h3>
+                    <ul style="margin: 10px 0 10px 20px;">
+                        ${tutor.achievements.map((a) => `<li style="margin: 5px 0;">${htmlEscape(a)}</li>`).join("")}
+                    </ul>
+        <h3 style="margin-top: 25px; color: #f56d36;"> Qualifications</h3>
+            <ul style="margin: 10px 0 10px 20px;">
+                ${tutor.qualifications.map((a) => `<li style="margin: 5px 0;">${htmlEscape(a)}</li>`).join("")}
+            </ul>        <button class="link_btn" style="margin: 10px 0 0 0;">View Profile →</button>
+    `;
+
+  return card;
+}
+
+
+// Search functionality
+function setupSearch() {
+  const searchBtn = document.getElementById("searchBtn");
+  const searchInput = document.getElementById("searchInput");
+  const searchResults = document.getElementById("searchResults");
+
+  if (!searchBtn) return;
+
+  function performSearch() {
+    const query = searchInput.value.trim();
+
+    // Clear previous results if query is empty and makes it so no unnecessary API calls are made
+    if (!query) {
+      searchResults.innerHTML = "";
+      return;
+    }
+
+    //Call the search API endpoint with the query and display results
+    fetch(`/tutors/search?q=${encodeURIComponent(query)}`)
+      .then((response) => response.json())
+      .then((results) => {
+        if (results.length > 0) {
+          searchResults.innerHTML =
+            '<h3 style="margin: 20px 0 10px 0;">Search Results:</h3>';
+          results.forEach((tutor) => {
+            const tutorCard = {
+              id: tutor.id,
+              name: tutor.first_name + " " + tutor.last_name,
+              subject: tutor.subject,
+              rating: tutor.rating,
+              achievements: tutor.achievements || [],
+              qualifications: tutor.qualifications || [],
+            };
+            searchResults.appendChild(createTutorCard(tutorCard));
+          });
+        } else {
+          searchResults.innerHTML =
+            '<p class="post" style="padding: 20px;">No tutors found for your search. Try another subject!</p>';
+        }
+      })
+      .catch((error) => {
+        console.error("Search error:", error);
+        searchResults.innerHTML =
+          '<p class="post" style="padding: 20px;">Error performing search. Please try again.</p>';
+      });
+  }
+
+  searchBtn.onclick = performSearch;
+  searchInput.onkeypress = (e) => {
+    if (e.key === "Enter") performSearch();
+  };
+}
+
+// View tutor profile
+function viewTutorProfile(tutorId) {
+  localStorage.setItem("viewTutorId", tutorId);
+  window.location.href = "../html/tutor_profile.html";
+}
+
+// Update UI based on login status
+
+async function updateUIForUser() {
+  const loginBtn = document.getElementById("login_btn");
+  const logoutBtn = document.getElementById("logout_btn");
+  const loginLink = document.getElementById("login_link");
+  const myBookingsNav = document.getElementById("myBookingsNav");
+  const myPostsNav = document.getElementById("myPostsNav");
+
+  try {
+    const response = await fetch("/me");
+    if (response.ok) {
+      const data = await response.json();
+      currentUser = data;
+
+      if (loginBtn) loginBtn.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "block";
+      if (loginLink)
+        loginLink.innerHTML = `${data.username} <i class="fa fa-caret-down"></i>`;
+
+      // Students see My Bookings, tutors don't
+      if (myBookingsNav)
+        myBookingsNav.style.display = data.role === "Student" ? "block" : "none";
+
+      // tutors see My posts, students don't
+      if (myPostsNav)
+        myPostsNav.style.display = data.role === "Tutor" ? "block" : "none";
+
+
+    } else {
+      // Not logged in
+      if (loginBtn) loginBtn.style.display = "block";
+      if (logoutBtn) logoutBtn.style.display = "none";
+      if (loginLink)
+        loginLink.innerHTML = 'Account <i class="fa fa-caret-down"></i>';
+      if (myBookingsNav) myBookingsNav.style.display = "none";
+    }
+  } catch (err) {
+    console.error("Auth check failed:", err);
+  }
+
+  // Setup logout
+  if (logoutBtn) {
+    logoutBtn.onclick = (e) => {
+      e.preventDefault();
+      localStorage.removeItem("currentUser");
+      window.location.href = "/logout";
+    };
+  }
+}
+
+
+// Initialise page
+document.addEventListener("DOMContentLoaded", () => {
+  loadData();
+  setupSearch();
+  updateUIForUser();
+});

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+    <h2>Create Account</h2>
+    <form action="/register" method="POST">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="text" name="first_name" placeholder="First Name" required>
+            <input type="text" name="last_name" placeholder="Last Name" required>
+            <select name="role" id="role" required>
+                <option value="">Select Role</option>
+                <option value="student">Student</option>
+                <option value="tutor">Tutor</option>
+            </select>
+            <input type="password" name="password" placeholder="Password" required>
+            
+            <button type="submit">Register</button>
+
+</form>
+    <p>Already have an account? <a href="/">Login</a></p>
+</body>
+</html>
