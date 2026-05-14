@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const emailController = require('./email');
 const pool = require("./db");
 const postsRouter = require("./posts");
+const bodyParser = require("body-parser");
 
 const path = require("path");
 const app = express();
@@ -38,7 +39,8 @@ app.get("/db-test", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({
-      success: false,
+      // success: false,
+      secure: process.env.NODE_ENV === "production",  // ← was false
       error: err.message,
     });
   }
@@ -66,7 +68,7 @@ app.use(
 
 app.use("/posts", postsRouter);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-var bodyParser = require("body-parser");
+
 
 
 

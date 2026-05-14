@@ -167,7 +167,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require('multer')
 const path = require("path");
-
+const fs = require("fs");
 const db = require('./db');
 const requireAuth = require("./public/middleware/auth")
 
@@ -311,7 +311,7 @@ router.post('/api/delete-post', async (req, res) => {
         //nothing deleted
         if (result.rowCount === 0) {
             return res.status(403).json({
-                error: 'Unauthorized'
+                error: 'Unauthorised'
             });
         }
 

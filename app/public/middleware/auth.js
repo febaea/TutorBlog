@@ -6,7 +6,7 @@ function requireAuth(req, res, next) {
 
     if (!token) {
         return res.status(401).json({
-            error: "Unauthorized"
+            error: "Unauthorised"
         });
     }
 
