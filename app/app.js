@@ -9,6 +9,8 @@ const emailController = require('./email');
 const pool = require("./db");
 const postsRouter = require("./posts");
 const app = express();
+const {encrypt, decrypt } = require("../utils/encryption");
+const crypto = require('crypto');
 const port = 3000;
 // TO DO : Make sure db doesn't store passwords as plain text - include hashing
 // TO DO : Make sure it is -  currentUser.user_id???
@@ -49,6 +51,14 @@ app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+
+const rateLimit = require('express-rate-limit');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per IP
+  message: { success: false, message: "Too many attempts. Try again later." }
+});
 
 app.use(
   session({
@@ -116,7 +126,7 @@ app.get("/", (req, res) => {
 });
 
 
-app.post("/", async (req, res) => {
+app.post("/", loginLimiter,  async (req, res) => {
   const username = req.body.username_input;
   const password = req.body.password_input;
 
@@ -135,7 +145,7 @@ app.post("/", async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
-      return res.json({ success: false });
+      return res.json({ success: false, message:"The username and/or password are incorrect. Please try again."});
     }
 
     const roleResult = await pool.query(
@@ -160,6 +170,12 @@ app.post("/", async (req, res) => {
     //   return res.json({ twofa: true });
     // }
     // If 2FA enabled and secret exists. -send to verify page 
+    if (user.twofa_enabled && !user.twofa_secret) {
+      req.session.tempUser = user;
+      return res.json({ setup2fa: true }); // force them to re-complete setup
+    }
+
+
     if (user.twofa_enabled && user.twofa_secret) {
       req.session.tempUser = user;
       return res.json({ twofa: true })
@@ -349,16 +365,20 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
   const { email, username, password, first_name, last_name, role } = req.body;
 
-
+  const emailHash = crypto.createHash('sha256').update(email.toLowerCase()).digest('hex');
 
   try {
     // Check if email exists
-    const existingEmail = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    // const existingEmail = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    // if (existingEmail.rows.length > 0) {
+    //   // return res.send('<h2>Email already registered</h2><a href="/register">Try again</a>');
+    //   // Delete existing user before re-registering
+    //   await pool.query('DELETE FROM users WHERE email = $1', [email.toLowerCase()]);
+    // }
+    const existingEmail = await pool.query('SELECT id FROM users WHERE email_hash = $1', [emailHash]);
     if (existingEmail.rows.length > 0) {
-      // return res.send('<h2>Email already registered</h2><a href="/register">Try again</a>');
-      // Delete existing user before re-registering
-      await pool.query('DELETE FROM users WHERE email = $1', [email.toLowerCase()]);
-    }
+        await pool.query('DELETE FROM users WHERE email_hash = $1', [emailHash]);
+      }
 
     // Check if username exists
     const existingUsername = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
@@ -391,18 +411,25 @@ app.post('/verify-registration', async (req, res) => {
   if (emailController.verifyOTP(email, otp)) {
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
+      
+      const encryptedEmail = await encrypt(email.toLowerCase());
+      const emailHash = crypto.createHash('sha256').update(email.toLowerCase()).digest('hex');
 
       // Get next user ID
       const idResult = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM users');
       const userId = idResult.rows[0].next_id;
 
       // Insert user
+      // await pool.query(
+      //   `INSERT INTO users (id, username, first_name, last_name, email, password, created_at) 
+      //            VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      //   [userId, username, first_name, last_name, email.toLowerCase(), hashedPassword]
+      // );
       await pool.query(
-        `INSERT INTO users (id, username, first_name, last_name, email, password, created_at) 
-                 VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-        [userId, username, first_name, last_name, email.toLowerCase(), hashedPassword]
+        `INSERT INTO users (id, username, first_name, last_name, email, email_hash, password, created_at) 
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+        [userId, username, first_name, last_name, encryptedEmail, emailHash, hashedPassword]
       );
-
       // Assign role
       const roleResult = await pool.query('SELECT id FROM roles WHERE LOWER(name) = LOWER($1)', [role || 'student']);
       if (roleResult.rows.length > 0) {
@@ -793,6 +820,11 @@ app.get("/test-post", async (req, res) => {
   } catch (err) {
     res.status(500).send(err.message);
   }
+});
+app.get("/test-decrypt", async (req, res) => {
+  const { rows } = await pool.query('SELECT email FROM users ORDER BY id DESC LIMIT 1');
+  const email = await decrypt(rows[0].email);
+  res.json({ email });
 });
 
 app.listen(port, () => {
