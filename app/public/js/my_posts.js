@@ -270,23 +270,64 @@ postForm.onsubmit = async (e) => {
     const content = document.getElementById("content_field").value.trim();
     const uploadInput = document.getElementById("upload_field");
 
-    const file = uploadInput.files[0];
+    // const file = uploadInput.files[0];
+    const file = uploadInput ? uploadInput.files[0] : null;
+
+    // //validations
+    // if (!title || !content) {
+    //     alert("Title and content are required.");
+    //     return;
+    // }
+
+    // if (title.length > 255) {
+    //     alert("Title too long");
+    //     return;
+    // }
+
+    // if (content.length > 50000) {
+    //     alert("Post too long");
+    //     return;
+    // }
+
+    console.log("1");
 
     //validations
+
     if (!title || !content) {
+
         alert("Title and content are required.");
+
         return;
+
     }
+
+    console.log("2");
+
+ 
 
     if (title.length > 255) {
+
         alert("Title too long");
+
         return;
+
     }
 
+    console.log("3");
+
+ 
+
     if (content.length > 50000) {
+
         alert("Post too long");
+
         return;
+
     }
+
+   
+
+ 
     
 
 
@@ -395,6 +436,26 @@ async function loadPosts() {
             contentContainer.textContent = post.content;
 
             postContainer.appendChild(contentContainer);
+            if (post.featured_image_url) {
+                const pdfLink = document.createElement('a');
+
+                pdfLink.href = `/uploads/${encodeURIComponent(post.featured_image_url)}`;
+
+                pdfLink.target = '_blank';
+
+ 
+
+                //prevents the page opened through link from manipulating the previous page
+
+                pdfLink.rel = 'noopener noreferrer';  
+
+                pdfLink.textContent = 'View PDF';
+
+                postContainer.appendChild(pdfLink);
+
+            }
+
+ 
 
             //edit button
             const editBtn = document.createElement('button');

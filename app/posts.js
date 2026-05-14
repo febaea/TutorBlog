@@ -169,12 +169,22 @@ const multer = require('multer')
 const path = require("path");
 
 const db = require('./db');
+const requireAuth = require("./public/middleware/auth")
+
+const uploadDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadDir)) {
+
+    fs.mkdirSync(uploadDir, { recursive: true });
+
+}
 
 
 //multer storage config
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        // cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
 
     filename: (req, file, cb) => {
@@ -215,13 +225,13 @@ const upload = multer({
 // }
 
 
-router.post("/make-post", upload.single("upload"), async (req, res) =>{
+router.post("/make-post", requireAuth, upload.single("upload"), async (req, res) =>{
 
     try{
 
         //REMOVE LATER
         // const userId = 1;
-        //const userId = req.user.id;
+        const userId = req.user.id;
         const {title, content} = req.body;
 
         if (!title || !content) {
@@ -239,7 +249,7 @@ router.post("/make-post", upload.single("upload"), async (req, res) =>{
 
             ` INSERT INTO posts (author_id, title, content, featured_image_url, created_at) 
             VALUES ($1, $2, $3, $4, NOW())`,
-            //[req.user.id, title, content, pdfPath]
+            [userId, title, content, pdfPath]
             //TEMP
             // [5, title, content, pdfPath]
 
@@ -255,35 +265,34 @@ router.post("/make-post", upload.single("upload"), async (req, res) =>{
     }
 });
 
-// router.get("/my-posts", requireAuth, async (req, res) => {
+router.get("/my-posts", requireAuth, async (req, res) => {
 
-//     //check logged in
-//     if (!req.user) {
-//         return res.status(401).json({
-//             error: "Unauthorised"
-//         });
-//     }
+    //check logged in
+    if (!req.user) {
+        return res.status(401).json({
+            error: "Unauthorised"
+        });
+    }
 
-//     try {
-//         const result = await db.query(
-//             `SELECT id, title, content, created_at
-//             FROM posts
-//             WHERE author_id = $1
-//             ORDER BY created_at DESC
-//             `,
-//             //[req.user.id]
-//             //TEMP
-//             [5]
-//         );
-//         res.json(result.rows);
+    try {
+        const result = await db.query(
+            `SELECT id, title, content, featured_image_url, created_at
+            FROM posts
+            WHERE author_id = $1
+            ORDER BY created_at DESC
+            `,
+            [req.user.id]
+            
+        );
+        res.json(result.rows);
 
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({
-//             error: "Failed to load posts"
-//         });
-//     }
-// });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: "Failed to load posts"
+        });
+    }
+});
 
 router.post('/api/delete-post', async (req, res) => {
     //example logged-in user

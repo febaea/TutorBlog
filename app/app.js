@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 const emailController = require('./email');
 const pool = require("./db");
 const postsRouter = require("./posts");
+
+const path = require("path");
 const app = express();
 const port = 3000;
 // TO DO : Make sure db doesn't store passwords as plain text - include hashing
@@ -22,7 +24,7 @@ const port = 3000;
 // const speakeasy = require("speakeasy");
 const QRcode = require("qrcode");
 const session = require("express-session");
-var bodyParser = require("body-parser");
+
 const fs = require("fs");
 
 
@@ -49,7 +51,6 @@ app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-
 app.use(
   session({
     secret: "secretKey",
@@ -62,6 +63,12 @@ app.use(
     }
   }),
 );
+
+app.use("/posts", postsRouter);
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+var bodyParser = require("body-parser");
+
+
 
 // JWT helpers
 function signToken(user) {
